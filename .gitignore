@@ -3,6 +3,10 @@
 *.ko
 *.obj
 *.elf
+*.img
+*.dat
+*.map
+obj/*
 
 # Libraries
 *.lib
