@@ -3,22 +3,62 @@
  * Função principal do kernel
  *
  * Marcos Medeiros
+ */
+/*
+
+TEXT_OFFSET:
+	Endereço físico onde o kernel foi linkado. Isso é necessário
+	para mapearmos o kernel no endereço virtual nas páginas corretas.
+
+PAGE_OFFSET:
+	Endereço virtual onde começa o kernel, geralmente em 0xC0000000.
+
+STATIC_MEM:
+	Quantidade de memória física que é mapeada diretamente
+	dentro do espaço do kernel permanentemente.
+
+VMALLOC_START:
+	Endereço onde começara as alocações virtuais de memória,
+	isso é, as páginas não precisam ser contínuas na memória
+	possibilitando alocações maiores.
+
+VMALLOC_SIZE:
+	Tamanho da área de alocação virtual, 128MB.
+
+IOREMAP_START:
+	Endereço onde começara as remapeações de memória para
+	dispositivos fazerem E/S. (MMIO)
+
+IOREMAP_SIZE:
+	Tamanho da área de remapeamento de E/S. 128MB
+
+HIGH_VECTOR:
+	Precisamos mapear os vetores na parte de cima do endereçamento,
+	já que a primeira página é utilizada pra pegar referências nulas.
 
 
-VMALLOC_START + VMALLOC_SIZE	+-------------------+
-								| VMALLOC        	|
-PAGE_OFFSET + HIGH_MEM			+-------------------+ VMALLOC_SIZE
-								| KERNEL            |
-PAGE_OFFSET (0xC000_0000)		+-------------------+ HIGH_MEM
-								| ESPAÇO DO USUÁRIO |
-								|                   |
-								|                   |
-								|                   |
-								|                   |
-								|                   |
-								|                   |
-								|                   |
-0x0000_0000 					+-------------------+
+0xFFFF_FFFF     +-------------------+
+                | ...               |
+                +-------------------+
+HIGH_VECTOR     | ARM VECTOR TABLE  |
+                +-------------------+
+                | ...               |
+                +-------------------+
+                | IOREMAP           |
+IOREMAP_START   +-------------------+
+                | VMALLOC        	|
+VMALLOC_START   +-------------------+
+                | KERNEL            |
+PAGE_OFFSET     +-------------------+
+				| ESPAÇO DO USUÁRIO |
+				|                   |
+				|                   |
+				|                   |
+				|                   |
+				|                   |
+				|                   |
+				|                   |
+0x0000_0000 	+-------------------+
  */
 
 #ifndef __MEMLAYOUT_H__
@@ -33,7 +73,7 @@ PAGE_OFFSET (0xC000_0000)		+-------------------+ HIGH_MEM
 
 /* 128MB de alocação virtual */
 #define VMALLOC_SIZE	(128 * 1024 * 1024)
-#define VMALLOC_START	(PAGE_OFFSET + HIGH_MEM)
+#define VMALLOC_START	(PAGE_OFFSET + STATIC_MEM)
 #define IOREMAP_START	(VMALLOC_START + VMALLOC_SIZE)
 /* 128MB de remapeamento */
 #define IOREMAP_SIZE	(128 * 1024 * 1024)

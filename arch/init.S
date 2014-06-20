@@ -66,7 +66,7 @@ clear_pgdir$:
 	/* Mapeia as páginas do kernel
 	 * r0 = pgdir
 	 * r1 = entrada na pgdir para o PAGE_OFFSET
-	 * r2 = numeros de entradas para mapear HIGH_MEM,
+	 * r2 = numeros de entradas para mapear STATIC_MEM,
 	 *      Cada entrada mapeia 1MB de memória.
 	 * r3 = enderço física da seção a mapear (1MB cada)
 	 * r4 = atributos da entrada do kernel do pgdir
@@ -74,7 +74,7 @@ clear_pgdir$:
 	 */
 	ldr		r0, =k_pgdir
 	ldr		r1, =(PAGE_OFFSET >> PGT_SHIFT)
-	ldr		r2, =(HIGH_MEM >> PGT_SHIFT)
+	ldr		r2, =(STATIC_MEM >> PGT_SHIFT)
 	mov		r3, #0
 	ldr		r4, =K_PGT_SECTION
 	ldr		r7, =(1024 * 1024)
@@ -82,7 +82,7 @@ clear_pgdir$:
 	/* O primeiro MB é mapeado em identidade */
 	str		r4, [r0]
 
-	/* Agora mapeamos de PAGE_OFFSET :: (PAGE_OFFSET + HIGH_MEM) */
+	/* Agora mapeamos de PAGE_OFFSET :: (PAGE_OFFSET + STATIC_MEM) */
 	mov		r6, #0
 	/* Coloca em r0 o ponteiro para a primeira entrada de PAGE_OFFSET */
 	add		r0, r0, r1, lsl #2

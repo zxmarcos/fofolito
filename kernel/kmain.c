@@ -30,7 +30,7 @@ void platform_setup()
 
 void mm_init()
 {
-	page_alloc_init(HIGH_MEM, 0, (unsigned) &k_reloc_end);
+	page_alloc_init(STATIC_MEM, 0, (unsigned) &k_reloc_end);
 	kmalloc_init();
 }
 
