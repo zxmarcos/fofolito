@@ -55,6 +55,9 @@
 #define ENTRY(name)	.text; .global name; name:
 #define IMPORT(name) .extern name
 
+/* Converte um endereço virtual para físico */
+#define PA(addr)	(addr - PAGE_OFFSET)
+
 #endif/*__ASSEMBLER__*/
 
 #define	CPSR_MODE_MASK	0x1f

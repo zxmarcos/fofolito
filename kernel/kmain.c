@@ -51,6 +51,7 @@ void kernel_info()
 
 void kmain()
 {
+#if 0
 	/* 
 	 * A primeira coisa a se fazer é iniciar todo o gerenciador
 	 * de memória.
@@ -59,7 +60,6 @@ void kmain()
 	
 
 	kmalloc(128);
-#if 0
 	/* Agora configuramos as IRQs */
 	irq_init();
 

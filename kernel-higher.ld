@@ -9,14 +9,23 @@ SECTIONS {
 	.stext 0x10000 : AT(0x10000) {
 		obj/init.o
 	}
+
+	/*
+	 * Apenas o bootloader é ligado no endereço físico, todas as outras
+	 * variáveis estão ligadas no endereço virtual
+	 */
+	. = 0xC0000000 + .;
+
 	/*
 	 * Nosso diretório de páginas do kernel, tem que
 	 * ser alinhado nos 16KB
 	 */
 	. = ALIGN(4096 * 4);
 	PROVIDE(k_pgdir = .);
+	
 	. = ALIGN(4096 * 4);
 	PROVIDE(k_pgdir_end = .);
+
 	/*
 	 * Nosso kernel é mapeado em 0xC0000000, no entanto como
 	 * esse endereço é o mapeamento linear da memória física,
@@ -25,7 +34,7 @@ SECTIONS {
 	. = 0xC0020000;
 	.text : AT(0x20000) {
 		PROVIDE(k_stack_svc = .);
-		PROVIDE(k_reloc_start = (. - 0xC0000000));
+		PROVIDE(k_reloc_start = .);
 		obj/start.o
 		*(.text)
 		*(.text.*)
@@ -53,7 +62,7 @@ SECTIONS {
 	PROVIDE(k_stack_abt = .);
 	. = . + 4096;
 	PROVIDE(k_stack_und = .);
-	PROVIDE(k_reloc_end = . - 0xC0000000);
+	PROVIDE(k_reloc_end = .);
 	/DISCARD/ : {
 		*(.comment*)
 	}
