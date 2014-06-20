@@ -26,7 +26,7 @@
 
 
 /* RaspberryPi tem 256MB de memória */
-#define HIGH_MEM	(1024 * 1024 * 256)
+#define STATIC_MEM	(1024 * 1024 * 256)
 
 #ifdef __ASSEMBLER__
 
