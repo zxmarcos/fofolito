@@ -51,12 +51,12 @@ void kernel_info()
 
 void kmain()
 {
-#if 0
 	/* 
 	 * A primeira coisa a se fazer é iniciar todo o gerenciador
 	 * de memória.
 	 */
 	mm_init();
+#if 0
 	
 
 	kmalloc(128);
