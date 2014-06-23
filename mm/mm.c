@@ -2,7 +2,7 @@
  * FOFOLITO - Sistema Operacional para RaspberryPi
  * 
  * Gerenciador de memória física
- * A ideia é utilizar um bitmap, e uma stack com frames livres
+ * A ideia é utilizar um bitmap.
  * Marcos Medeiros
  */
 
@@ -65,8 +65,12 @@ void page_mark_kernel(unsigned int start, unsigned int end)
 	k_mark_pages(ps, pe);
 	
 	/* vamos marcar o diretório de páginas também */
-	ps = k_pgdir >> PAGE_SHIFT;
-	pe = k_pgdir_end >> PAGE_SHIFT;
+	ps = __virt_to_phys(k_pgdir) >> PAGE_SHIFT;
+	pe = (ps + sizeof(pgd_t)) >> PAGE_SHIFT;
+	k_mark_pages(ps, pe);
+
+	ps = __virt_to_phys(k_init_pgdir) >> PAGE_SHIFT;
+	pe = (ps + sizeof(pgd_t)) >> PAGE_SHIFT;
 	k_mark_pages(ps, pe);
 	
 	/* agora vamos marcar o próprio bitmap */

@@ -18,13 +18,18 @@ SECTIONS {
 
 	/*
 	 * Nosso diretório de páginas do kernel, tem que
-	 * ser alinhado nos 16KB
+	 * ser alinhado nos 16KB, definimos dois diretórios, 
+	 * k_init_pgdir será utilizado somente no boot, apenas para colocar
+	 * o kernel rodando no endereçamento virtual, k_pgdir será contruido
+	 * assim que o kernel iniciar.
 	 */
 	. = ALIGN(4096 * 4);
+
 	PROVIDE(k_pgdir = .);
+	. += 16K;
+	PROVIDE(k_init_pgdir = .);
+	. += 16K;
 	
-	. = ALIGN(4096 * 4);
-	PROVIDE(k_pgdir_end = .);
 
 	/*
 	 * Nosso kernel é mapeado em 0xC0000000, no entanto como

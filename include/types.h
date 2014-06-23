@@ -14,4 +14,5 @@ typedef volatile unsigned int *const ioaddr;
  */
 #define UNUSED(var)	(void) var
 
+
 #endif/*__TYPES_H__*/

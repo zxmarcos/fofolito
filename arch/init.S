@@ -36,7 +36,7 @@ pre_init:
 	mov		r8, #0	
 	mov		r9, #0
 
-	ldr		r0, =PA(k_pgdir)
+	ldr		r0, =PA(k_init_pgdir)
 	mov		r10, r0
 	/* Limpa 64 entradas por loop */
 	ldr		r1, =(4096 / (8 * 8))
@@ -72,7 +72,7 @@ clear_pgdir$:
 	 * r4 = atributos da entrada do kernel do pgdir
 	 * r7 = tamanho de uma seção (1MB)
 	 */
-	ldr		r0, =PA(k_pgdir)
+	ldr		r0, =PA(k_init_pgdir)
 	ldr		r1, =(PAGE_OFFSET >> PGT_SHIFT)
 	ldr		r2, =(STATIC_MEM >> PGT_SHIFT)
 	mov		r3, #0
@@ -101,7 +101,7 @@ map_next$:
 	ldr		r0, =0x55555555
 	mcr		p15, 0, r0, c3, c0, 0
 	/* Vamos setar o endereço da ttbr */
-	ldr		r0, =PA(k_pgdir)
+	ldr		r0, =PA(k_init_pgdir)
 	mcr		p15, 0, r0, c2, c0, 0
 	/* Vamos dizer a MMU, para usar apenas o TTBR0 */
 	mov		r0, #0

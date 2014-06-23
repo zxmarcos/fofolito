@@ -61,6 +61,9 @@ static inline pgt_t *pde_to_pgt(pde_t *pde) {
 	return (pgt_t *) (pde->table >> PDE_SHIFT);
 }
 
+/* Diretórios do kernel */
+extern struct page_dir *k_pgdir;
+extern struct page_dir *k_init_pgdir;
 
 
 #endif

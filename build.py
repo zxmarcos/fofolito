@@ -36,7 +36,7 @@ c_flags = '-Iinclude -mcpu=arm1176jzf-s -marm -Wall -Wextra -nostartfiles -ffree
 if debug_version:
     c_flags = c_flags + ' -g'
 else:
-    c_flags = c_flags + ' -O3'
+    c_flags = c_flags + ' -O1'
 asm_compiler = toolchain + 'as'
 asm_preprocessor_flags  = '-Iinclude -nostdinc -E -mcpu=arm1176jzf-s ' + defines_list
 asm_flags = '-Iinclude -mcpu=arm1176jzf-s'
@@ -213,6 +213,7 @@ if __name__ == '__main__':
                 os.remove('kernel.map')
             if os.path.exists(build_db):
                 os.remove(build_db)
+        os.system("rm obj/*")
     elif sys.argv[1] == 'run':
         print('Executando o projeto...')
         if os.path.exists(project_img):
