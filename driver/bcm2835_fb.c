@@ -5,6 +5,7 @@
  * Marcos Medeiros
  */
 #include <asm/barrier.h>
+#include <asm/asm.h>
 #include <asm/io.h>
 #include <kernel/fb.h>
 #include <driver/bcm2835.h>
@@ -13,7 +14,7 @@
 
 static const struct fbdev_mode bcm2835_fb_modes[] = {
 #ifdef __EMUVERSION__
-	{ 640, 480, 16 },
+	{ 800, 600, 16 },
 #endif
 	{ 1024, 720, 16 },
 	{ 1024, 720, 24 },
@@ -58,21 +59,21 @@ static uint bcm2835_fb_modeset(struct fbdev *dev, const struct fbdev_mode *mode)
 	/* É necessário tentar algumas vezes até que nossa solicitação
 	 * seja atendida pela videocore.
 	 */
-	do {
+	//do {
 		do_dsb();
 		/* Envia uma mensagem para a Videocore informando sobre o nosso modo */
-		bcm2835_mbox_write(MBOX_CHANNEL_FB, (uint) &msgfb);
+		bcm2835_mbox_write(MBOX_CHANNEL_FB, __pa(&msgfb));
 		/* Espera a resposta */
 		bcm2835_mbox_read(MBOX_CHANNEL_FB);
 		do_dmb();
-	} while (msgfb.baseptr == 0);
+	//} while (msgfb.baseptr == 0);
 
 	dev->width = msgfb.width;
 	dev->height = msgfb.height;
 	dev->bpp = msgfb.bpp;
 	dev->pitch = msgfb.pitch;
 	dev->size = msgfb.size;
-	dev->base = (void *) msgfb.baseptr;
+	dev->base = ioremap(msgfb.baseptr, dev->size);
 
 	return -EOK;
 }

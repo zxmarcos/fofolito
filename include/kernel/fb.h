@@ -37,7 +37,6 @@ struct fbdev_font {
 
 /* Fonte padrão */
 const struct fbdev_font font_vga_8x16;
-const struct fbdev_font font_sun_8x16;
 
 
 /* Descreve um dispositivo de framebuffer e seu modo atual */

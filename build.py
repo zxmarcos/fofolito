@@ -85,6 +85,8 @@ src_files = {
     'arch/irq.c'            : object_path + 'irq.o',
     'arch/exception.c'      : object_path + 'exception.o',
     'arch/page.c'           : object_path + 'page.o',
+    'arch/ioremap.c'        : object_path + 'ioremap.o',
+    'arch/setup.c'          : object_path + 'setup.o',
     'kernel/kmain.c'        : object_path + 'kmain.o',
     'kernel/fb.c'           : object_path + 'fb.o',
     'kernel/printk.c'       : object_path + 'printk.o',

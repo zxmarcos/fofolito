@@ -8,7 +8,9 @@
 #include <driver/bcm2835.h>
 #include <types.h>
 
-ioaddr gpio_reg = (ioaddr) 0x20200000;
+#define GPIO_IOBASE	0x20200000
+#define GPIO_SIZE	0x48
+static volatile unsigned *gpio_reg = NULL;
 
 /* Como nosso acesso é de 32bits, divimos os endereços por 4bytes */
 #define REG_FUNCSEL_0	(0x00 >> 2)
@@ -28,7 +30,7 @@ ioaddr gpio_reg = (ioaddr) 0x20200000;
 
 void bcm2835_gpio_init()
 {
-	
+	gpio_reg = ioremap(GPIO_IOBASE, GPIO_SIZE);
 	/* Configura o pino do LED como saída */
 	bcm2835_gpio_setfunction(RPI_LED_OK, GPIO_FUNC_OUTPUT);
 }

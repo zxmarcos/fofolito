@@ -12,7 +12,9 @@
 #include <kernel/printk.h>
 #include <errno.h>
 
-ioaddr timer = (ioaddr) 0x2000B000;
+#define TIMER_IOBASE	0x2000B000
+#define TIMER_SIZE		0x424
+static volatile unsigned *timer = NULL;
 
 #define REG_LOAD		(0x400 >> 2)
 #define REG_VALUE		(0x404 >> 2)
@@ -41,6 +43,7 @@ static int bcm2835_timer_handler()
 
 int bcm2835_timer_init()
 {
+	timer = ioremap(TIMER_IOBASE, TIMER_SIZE);
 
 	irq_install_service(ARM_IRQ(0), &bcm2835_timer_handler);
 

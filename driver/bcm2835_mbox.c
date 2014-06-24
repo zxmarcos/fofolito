@@ -9,8 +9,11 @@
 #include <driver/bcm2835.h>
 #include <errno.h>
 
+#define MBOX_IOBASE	0x2000B880
+#define MBOX_SIZE	0x24
+
 /* A mailbox é mapeada nesse endereço de memória */
-ioaddr mbox_reg = (ioaddr) 0x2000B880;
+volatile unsigned *mbox_reg = NULL;
 
 /* Registradores da MAILBOX */
 #define REG_READ	(0x00 >> 2)
@@ -23,6 +26,7 @@ ioaddr mbox_reg = (ioaddr) 0x2000B880;
 
 int bcm2835_mbox_init()
 {
+	mbox_reg = ioremap(MBOX_IOBASE, MBOX_SIZE);
 	return -EOK;
 }
 

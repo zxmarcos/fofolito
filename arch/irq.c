@@ -18,7 +18,11 @@
 #define GPU_IRQ_MAX	64
 #define ARM_IRQ_MAX	8
 
-ioaddr irqregs = (ioaddr) 0x2000B000;
+#define IRQ_SIZE	0x30
+#define IRQ_IOBASE	0x2000B000
+
+static volatile unsigned *irqregs = NULL;
+
 /* registrados para IRQs do arm */
 #define REG_IRQBPEN	(0x200 >> 2)
 #define REG_IRQBENA	(0x218 >> 2)
@@ -223,6 +227,7 @@ void irq_handler()
 
 void irq_init()
 {
+	irqregs = ioremap(IRQ_IOBASE, IRQ_SIZE);
 	int i = 0;
 	for (; i < GPU_IRQ_MAX; i++) {
 		gpu_irq_service_table[i] = &gpu_isr_default;

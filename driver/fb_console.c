@@ -13,7 +13,7 @@
 
 /* Nosso dispositivo de framebuffer */
 struct fbdev *dev = NULL;
-const struct fbdev_font *font = &font_vga_8x16;
+static const struct fbdev_font *font = &font_vga_8x16;
 
 uint cursor_x = 0;
 uint cursor_y = 0;
@@ -36,7 +36,7 @@ int fb_console_init()
 
 	cursor_x = 0;
 	cursor_y = 0;
-	font = &font_sun_8x16;
+	font = &font_vga_8x16;
 	console_columns = dev->width / font->width;
 	console_rows = dev->height / font->height;
 	char_width = font->width;
