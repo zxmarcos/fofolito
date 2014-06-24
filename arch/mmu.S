@@ -27,6 +27,8 @@ ENTRY(mmu_set_ttbr)
 	mcr		p15, 0, r0, c2, c0, 0
 	mov		r0, #0
 	mcr		p15, 0, r0, c2, c0, 1
+	/* Inválida o tlb imediatamente */
+	mcr		p15, 0, r0, c8, c7, 0
 	mov		pc, lr
 
 ENTRY(mmu_set_ttbcr)
@@ -40,6 +42,7 @@ ENTRY(mmu_set_dom)
 ENTRY(mmu_set_cr)
 	mcr		p15, 0, r0, c1, c0, 0
 	mov		pc, lr
+
 
 /* Invalida o TLB inteiro */
 ENTRY(mmu_flush_tlb)
@@ -75,4 +78,8 @@ ENTRY(mmu_invpg_dcache)
 	ldr		r1, =0xFFF
 	and		r0, r0, r1
 	mcr		p15, 0, r0, c8, c6, 1
+	mov		pc, lr
+
+ENTRY(mmu_set_vector_base)
+	mcr		p15, 0, r0, c12, c0, 0
 	mov		pc, lr

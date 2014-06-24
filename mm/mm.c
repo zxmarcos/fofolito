@@ -63,19 +63,10 @@ void page_mark_kernel(unsigned int start, unsigned int end)
 	unsigned int ps = start >> PAGE_SHIFT;
 	unsigned int pe = (end >> PAGE_SHIFT) + 1;
 	k_mark_pages(ps, pe);
-	
-	/* vamos marcar o diretório de páginas também */
-	ps = __virt_to_phys(k_pgdir) >> PAGE_SHIFT;
-	pe = (ps + sizeof(pgd_t)) >> PAGE_SHIFT;
-	k_mark_pages(ps, pe);
 
-	ps = __virt_to_phys(k_init_pgdir) >> PAGE_SHIFT;
-	pe = (ps + sizeof(pgd_t)) >> PAGE_SHIFT;
-	k_mark_pages(ps, pe);
-	
 	/* agora vamos marcar o próprio bitmap */
-	ps = (unsigned int) pmm_bitmap >> PAGE_SHIFT;
-	pe = (unsigned int) (pmm_bitmap + pmm_bitmap_size) >> PAGE_SHIFT;
+	ps = (unsigned int) __pa(pmm_bitmap) >> PAGE_SHIFT;
+	pe = (unsigned int) ((ps + pmm_bitmap_size) >> PAGE_SHIFT) + 1;
 	k_mark_pages(ps, pe);
 }
 
@@ -89,7 +80,7 @@ unsigned int page_alloc_init(unsigned int memory,
 	unsigned int npages = memory >> PAGE_SHIFT;
 
 	/* Nosso primeiro bitmap fica logo após o termino do kernel */
-	pmm_bitmap = (unsigned int *) (kend);
+	pmm_bitmap = (unsigned int *) (__va(kend));
 	pmm_total_pages = npages;
 	total_memory = memory;
 
@@ -104,6 +95,7 @@ unsigned int page_alloc_init(unsigned int memory,
 	}
 	/* Vamos marcar as páginas do kernel como utilizadas */
 	page_mark_kernel(0, k_addr_end);
+
 	return -EOK;
 }
 
@@ -169,7 +161,7 @@ void *page_alloc()
 	page_set(pos, 0);
 
 	/* Retorna o endereço no espaço do kernel */
-	return __phys_to_virt(pos << PAGE_SHIFT);
+	return __va(pos << PAGE_SHIFT);
 }
 
 /*
@@ -219,7 +211,7 @@ void *page_alloc_n(unsigned int npages)
 		page_set(page_start + block, 0);
 
 	addr = page_start << PAGE_SHIFT;
-	return __phys_to_virt(addr);
+	return __va(addr);
 }
 
 
@@ -267,5 +259,5 @@ void *page_alloc_align_n(unsigned int npages, unsigned int align)
 		page_set(page_start + block, 0);
 
 	addr = page_start << PAGE_SHIFT;
-	return __phys_to_virt(addr);
+	return __va(addr);
 }

@@ -73,8 +73,11 @@
 #define CPSR_FIQ_DISABLE	0x40
 
 #ifndef __ASSEMBLER__
+/* Macros úteis para converter endereços físicos e virtuais */
 #define __virt_to_phys(x)	((unsigned long)(x) - PAGE_OFFSET)
 #define __phys_to_virt(x)	((void *) ((unsigned long)(x) + PAGE_OFFSET))
+#define __va(x)	(__phys_to_virt(x))
+#define __pa(x)	(__virt_to_phys(x))
 #endif
 
 

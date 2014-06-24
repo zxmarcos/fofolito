@@ -13,7 +13,9 @@
 #include <asm/irq.h>
 #include <asm/page.h>
 #include <asm/asm.h>
+#include <asm/mmu.h>
 #include <asm/offset.h>
+#include <memory.h>
 
 extern void simple_delay(int ticks);
 
@@ -30,8 +32,9 @@ void platform_setup()
 
 void mm_init()
 {
-	page_alloc_init(STATIC_MEM, 0, (unsigned) &k_reloc_end);
+	page_alloc_init(STATIC_MEM, 0, __pa(k_reloc_end));
 	kmalloc_init();
+	paging_init();
 }
 
 static inline void led_blink()
@@ -49,15 +52,36 @@ void kernel_info()
 	pages_info();
 }
 
+
+/*
+ * Mapeia a tabela de exceções na última página
+ */
+void high_vectors_setup()
+{
+	char *vectors = page_alloc();
+	extern char interrupt_vector_table;
+	extern char interrupt_vector_table_end;
+	unsigned size = (unsigned)(&interrupt_vector_table_end - &interrupt_vector_table);
+
+	memset(vectors, 0, PAGE_SIZE);
+	memcpy_s(vectors, &interrupt_vector_table, size);
+
+	char *hivec = (char *) 0xFFFFF000;
+	page_map(&k_pgdir, hivec, PFN_FROM_VA(vectors));
+	mmu_set_vector_base(hivec);
+}
+
+
 void kmain()
 {
-#if 0
 	/* 
 	 * A primeira coisa a se fazer é iniciar todo o gerenciador
 	 * de memória.
 	 */
 	mm_init();
-	
+	high_vectors_setup();
+
+#if 0
 
 	kmalloc(128);
 	/* Agora configuramos as IRQs */

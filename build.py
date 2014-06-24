@@ -20,7 +20,7 @@ project_img = project_name + '.img'
 
 # Flag para compilar uma imagem que rode no QEMU
 emulator_version = True
-debug_version = False
+debug_version = True
 
 # =============================================================================
 # Definicoes padroes para a toolchain
@@ -36,7 +36,7 @@ c_flags = '-Iinclude -mcpu=arm1176jzf-s -marm -Wall -Wextra -nostartfiles -ffree
 if debug_version:
     c_flags = c_flags + ' -g'
 else:
-    c_flags = c_flags + ' -O1'
+    c_flags = c_flags + ' -O0'
 asm_compiler = toolchain + 'as'
 asm_preprocessor_flags  = '-Iinclude -nostdinc -E -mcpu=arm1176jzf-s ' + defines_list
 asm_flags = '-Iinclude -mcpu=arm1176jzf-s'
@@ -90,6 +90,7 @@ src_files = {
     'kernel/printk.c'       : object_path + 'printk.o',
     'mm/mm.c'               : object_path + 'mm.o',
     'mm/kmalloc.c'          : object_path + 'kmalloc.o',
+    'mm/paging.c'           : object_path + 'paging.o',
     'lib/div.c'             : object_path + 'div.o',
     'lib/memory.c'          : object_path + 'memory.o',
     'lib/memory_s.S'        : object_path + 'memory_s.o',
@@ -223,7 +224,7 @@ if __name__ == '__main__':
     elif sys.argv[1] == 'debug':
         print('Debuggando o projeto...')
         if os.path.exists(project_img):
-            os.system('qemu-system-arm -s -S -kernel %s -cpu arm1176 -m 256 -M raspi' % (project_img))
+            os.system('qemu-system-arm -s -S -kernel %s -cpu arm1176 -m 256 -M raspi'  % 'kernel.elf')#(project_img))
         else:
             print('Sistema não construido!')
     elif sys.argv[1] == 'copy':

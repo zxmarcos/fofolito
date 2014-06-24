@@ -24,6 +24,8 @@ void mmu_set_ttbcr(uint value);
 void mmu_set_dom(uint value);
 void mmu_set_cr(uint value);
 
+void mmu_set_vector_base(void *vaddr);
+
 void mmu_flush_tlb();
 void mmu_flush_icash();
 void mmu_flush_dcash();

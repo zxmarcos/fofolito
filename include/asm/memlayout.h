@@ -38,10 +38,8 @@ HIGH_VECTOR:
 
 
 0xFFFF_FFFF     +-------------------+
-                | ...               |
-                +-------------------+
-HIGH_VECTOR     | ARM VECTOR TABLE  |
-                +-------------------+
+                | ARM VECTOR TABLE  |
+0xFFFF_F000     +-------------------+
                 | ...               |
                 +-------------------+
                 | IOREMAP           |

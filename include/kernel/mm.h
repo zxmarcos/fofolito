@@ -18,4 +18,6 @@ int kmalloc_init();
 void *kmalloc(unsigned int size);
 void kfree(void *ptr);
 
+int paging_init();
+
 #endif

@@ -38,6 +38,7 @@ _excpt_reserved:		.word excpt_reserved_caller
 _excpt_irq:				.word excpt_irq_caller
 _excpt_fiq:				.word excpt_fiq_caller
 
+.global interrupt_vector_table_end
 interrupt_vector_table_end:
 
 
