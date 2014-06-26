@@ -12,6 +12,7 @@
 #include <driver/bcm2835.h>
 #include <asm/page.h>
 #include <asm/asm.h>
+#include <asm/irq.h>
 #include <asm/offset.h>
 #include <asm/platform.h>
 #include <memory.h>

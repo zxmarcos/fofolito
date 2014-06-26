@@ -31,7 +31,6 @@ static void setup_kernel_dir()
 		vaddr += PAGE_SIZE;
 		pfn++;
 	}
-
 }
 
 int paging_init()
