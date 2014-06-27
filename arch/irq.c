@@ -209,7 +209,9 @@ int irq_install_service(uint irq, irq_service_t service)
  */
 void irq_handler()
 {
+	static int counter = 0;
 	uint val = irqregs[REG_IRQBPEN];
+	printk("IRQ %d\n", counter++);
 
 	int i = 0;
 	/* Despacha as interrupções vindas pelo ARM */

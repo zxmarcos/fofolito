@@ -32,7 +32,7 @@ defines_list =  (' '.join([ '-D'+d for d in defines ]))
 toolchain = '/opt/gcc-arm/bin/arm-none-eabi-'
 c_compiler = toolchain + 'gcc'
 cpu_model = '-mcpu=arm926ej-s'
-c_flags = '-Iinclude -mcpu=arm1176jzf-s -marm -Wall -Wextra -nostartfiles -ffreestanding -nodefaultlibs -nostdinc -nostdlib -ffreestanding -fno-builtin -fomit-frame-pointer -std=gnu99 -c '  + defines_list
+c_flags = '-Iinclude -mcpu=arm1176jzf-s -marm -Wno-unused-function -Wall -Wextra -nostartfiles -ffreestanding -nodefaultlibs -nostdinc -nostdlib -ffreestanding -fno-builtin -fomit-frame-pointer -std=gnu99 -c '  + defines_list
 if debug_version:
     c_flags = c_flags + ' -g'
 else:
@@ -87,9 +87,11 @@ src_files = {
     'arch/page.c'           : object_path + 'page.o',
     'arch/ioremap.c'        : object_path + 'ioremap.o',
     'arch/setup.c'          : object_path + 'setup.o',
+    'arch/switch.S'         : object_path + 'switch.o',
     'kernel/kmain.c'        : object_path + 'kmain.o',
     'kernel/fb.c'           : object_path + 'fb.o',
     'kernel/printk.c'       : object_path + 'printk.o',
+    'kernel/sched.c'       : object_path + 'sched.o',
     'mm/mm.c'               : object_path + 'mm.o',
     'mm/kmalloc.c'          : object_path + 'kmalloc.o',
     'mm/paging.c'           : object_path + 'paging.o',

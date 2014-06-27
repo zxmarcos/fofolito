@@ -8,6 +8,7 @@
 #include <kernel/mm.h>
 #include <kernel/fb.h>
 #include <kernel/printk.h>
+#include <kernel/sched.h>
 #include <driver/fb_console.h>
 #include <driver/bcm2835.h>
 #include <asm/page.h>
@@ -16,6 +17,8 @@
 #include <asm/offset.h>
 #include <asm/platform.h>
 #include <memory.h>
+#include <asm/thread.h>
+#include <kernel/task.h>
 
 extern void simple_delay(int ticks);
 
@@ -44,8 +47,32 @@ void kernel_info()
 }
 
 
+extern void ret_from_fork();
+
+static void test_task() {
+	for (;;) {
+		printk("b");
+		simple_delay(DELAY);
+	}
+}
+
+void init_task()
+{
+	struct task *tsk = kmalloc(sizeof(*tsk));
+	tsk->state = TASK_RUNNABLE;
+	tsk->pid = 100;
+	tsk->name = "task_marota";
+	tsk->thread.cpu.pc = (unsigned long) ret_from_fork;
+	unsigned *stack = page_alloc();
+	stack += (PAGE_SIZE >> 2) - 1;
+	*stack = (unsigned long) test_task;
+	tsk->thread.cpu.sp = (unsigned) stack;
+	sched_add_task(tsk);
+}
+
 void kmain()
 {
+	irq_disable();
 	/* 
 	 * A primeira coisa a se fazer é iniciar todo o gerenciador
 	 * de memória.
@@ -54,16 +81,21 @@ void kmain()
 	
 	platform_setup();
 
-
-
 	/* Requisita um modo se existir um framebuffer*/
 	fb_set_mode();
 	/* Inicia o console sobre o framebuffer */
 	fb_console_init();
 	kernel_info();
-	
+
+	sched_init();
+	init_task();
+
 	/* Agora habilitamos as interrupções */
 	irq_enable();
 
-	for (;;);
+	/* Fica de boas esperando as trocas de contexto */
+	for (;;) {
+		printk("a");
+		simple_delay(DELAY);
+	}
 }

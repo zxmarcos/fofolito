@@ -13,14 +13,26 @@ IMPORT(irq_handler)
 .align 4
 ENTRY(excpt_irq_caller)
 	sub		lr, lr, #4
+
+	/* Salva lr e spsr na stack do kernel*/
+	srsfd	sp!, #CPSR_SVC_MODE
+
+	/* Muda para o modo svc (kernel) */
+	cps		#CPSR_SVC_MODE
 	stmfd	sp!, {lr}
 	/* Vamos salvar todos os registradores na pilha */
 	stmfd	sp!, {r0 - r12}
 	bl		irq_handler
-	ldmfd	sp!, {r0 - r12}
-	/* o processador guarda o endereço de retorno + 4 em lr */
-	ldmfd	sp!, {pc}^
+	ldmfd	sp!, {r0 - r12, lr}
+	
+	rfe		sp!
 
+
+.align 4
+ENTRY(ret_from_fork)
+	mov		r0, #0x13
+	msr		spsr, r0
+	ldmfd	sp!, {pc}^
 
 /* Chamado quando uma instrução não reconhecida é encontrada */
 .align 4
