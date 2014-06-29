@@ -11,4 +11,6 @@ int sched_init();
 int sched_add_task(struct task *tsk);
 void schedule();
 
+int sched_current_pid();
+
 #endif/*__SCHED_H__*/

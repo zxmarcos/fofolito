@@ -211,8 +211,9 @@ void irq_handler()
 {
 	static int counter = 0;
 	uint val = irqregs[REG_IRQBPEN];
+#if 0	
 	printk("IRQ %d\n", counter++);
-
+#endif
 	int i = 0;
 	/* Despacha as interrupções vindas pelo ARM */
 	for (; i < ARM_IRQ_MAX; i++) {

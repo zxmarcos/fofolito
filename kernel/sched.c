@@ -18,6 +18,13 @@ static struct task idle_task = {
 	.name = "idle",
 };
 
+int sched_current_pid()
+{
+	if (current_task)
+		return current_task->pid;
+	return 0;
+}
+
 #define RQ_NEXT_TASK()	list_entry(run_queue.next, struct task, list)
 
 /* Pega a próxima tarefa a executar */

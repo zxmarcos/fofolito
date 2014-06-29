@@ -51,23 +51,29 @@ extern void ret_from_fork();
 
 static void test_task() {
 	for (;;) {
-		printk("b");
-		simple_delay(DELAY);
+		printk("%d:", sched_current_pid());
+		//simple_delay(DELAY);
 	}
 }
 
-void init_task()
+struct task *create_task(const char *name, int pid) 
 {
 	struct task *tsk = kmalloc(sizeof(*tsk));
 	tsk->state = TASK_RUNNABLE;
-	tsk->pid = 100;
-	tsk->name = "task_marota";
+	tsk->pid = pid;
+	tsk->name = name;
 	tsk->thread.cpu.pc = (unsigned long) ret_from_fork;
 	unsigned *stack = page_alloc();
 	stack += (PAGE_SIZE >> 2) - 1;
 	*stack = (unsigned long) test_task;
 	tsk->thread.cpu.sp = (unsigned) stack;
 	sched_add_task(tsk);
+	return tsk;
+}
+
+void init_task()
+{
+	create_task("a", 5);
 }
 
 void kmain()
@@ -96,6 +102,6 @@ void kmain()
 	/* Fica de boas esperando as trocas de contexto */
 	for (;;) {
 		printk("a");
-		simple_delay(DELAY);
+		led_blink();
 	}
 }

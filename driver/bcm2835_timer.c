@@ -54,7 +54,7 @@ int bcm2835_timer_init()
      * e o contador livre também é habilitado.
 	 */
 	timer[REG_CTRL] = REG_CTRL_23BIT | REG_CTRL_INTEN | REG_CTRL_ENABLE | REG_CTRL_FRC_ENABLE;
-	timer[REG_RELOAD] = 0xF0000;
+	timer[REG_RELOAD] = 0x1000;
 	irq_enable_line(ARM_IRQ(0));
 	return -EOK;
 }
