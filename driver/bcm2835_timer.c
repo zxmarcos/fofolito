@@ -92,9 +92,9 @@ int bcm2835_timer_init()
      *
      * interval = ms x timer_clock (em MHz)
      *
-     * Queremos 1 tick a cada 1ms, então...
+     * Queremos 1 tick a cada 5ms, então...
 	 */
-	timer[REG_RELOAD] = 1 * (timer_clock / MHz);
+	timer[REG_RELOAD] = 5 * (timer_clock / MHz);
 
 	/* 
 	 * Habilita o temporalizador com um contador de 23bits, interrupções habilitadas 
