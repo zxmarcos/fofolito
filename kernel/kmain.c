@@ -51,8 +51,10 @@ extern void ret_from_fork();
 
 static void test_task() {
 	for (;;) {
+#if 0
 		printk("%d:", sched_current_pid());
 		//simple_delay(DELAY);
+#endif
 	}
 }
 
@@ -101,7 +103,6 @@ void kmain()
 
 	/* Fica de boas esperando as trocas de contexto */
 	for (;;) {
-		printk("a");
-		led_blink();
+		asm("wfi");
 	}
 }

@@ -6,6 +6,8 @@
 #ifndef __IRQ_H__
 #define __IRQ_H__
 
+#include <types.h>
+
 #define GPU_IRQ_FLAG	0x80000000
 #define ARM_IRQ(n)	(n & ~GPU_IRQ_FLAG)
 #define GPU_IRQ(n)	(GPU_IRQ_FLAG | n)

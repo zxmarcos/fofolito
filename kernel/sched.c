@@ -100,5 +100,4 @@ void schedule()
 		current_task = next;
 		switch_to(&last->thread, &current_task->thread);
 	}
-	printk(":S:");
 }
