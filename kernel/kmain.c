@@ -95,11 +95,13 @@ void kmain()
 	fb_console_init();
 	kernel_info();
 
+	bcm2835_emmc_init();
+
 	sched_init();
 	init_task();
 
 	/* Agora habilitamos as interrupções */
-	irq_enable();
+	//irq_enable();
 
 	/* Fica de boas esperando as trocas de contexto */
 	for (;;) {

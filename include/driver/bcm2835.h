@@ -31,5 +31,7 @@ int bcm2835_timer_init();
 void bcm2835_timer_start();
 uint bcm2835_timer_read();
 
+/* emmc */
+void bcm2835_emmc_init();
 
 #endif/*__BCM2835_H__*/

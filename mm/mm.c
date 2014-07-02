@@ -14,7 +14,7 @@
 #include <errno.h>
 #include <types.h>
 
-#define DEBUG_PAGE_ALLOC	1
+#define DEBUG_PAGE_ALLOC	0
 
 unsigned int pmm_bitmap_size = 0;
 /* bitmap das páginas */
@@ -39,7 +39,9 @@ static inline void page_set(unsigned int page, int free)
 	unsigned int pos = (page / 32);
 	unsigned int bit = (page % 32) ^ 31;
 
+#if 0
 	printk("ps[%d]-%d\n", page, free);
+#endif
 
 	if (free) 
 		pmm_bitmap[pos] &= ~(1 << bit);

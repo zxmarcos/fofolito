@@ -36,7 +36,7 @@ c_flags = '-Iinclude -mcpu=arm1176jzf-s -marm -Wno-unused-function -Wall -Wextra
 if debug_version:
     c_flags = c_flags + ' -g'
 else:
-    c_flags = c_flags + ' -O0'
+    c_flags = c_flags + ' -O3'
 asm_compiler = toolchain + 'as'
 asm_preprocessor_flags  = '-Iinclude -nostdinc -E -mcpu=arm1176jzf-s ' + defines_list
 asm_flags = '-Iinclude -mcpu=arm1176jzf-s'
@@ -102,6 +102,7 @@ src_files = {
     'driver/bcm2835_fb.c'   : object_path + 'bcm2835_fb.o',
     'driver/bcm2835_gpio.c' : object_path + 'bcm2835_gpio.o',
     'driver/bcm2835_timer.c': object_path + 'bcm2835_timer.o',
+    'driver/bcm2835_emmc.c' : object_path + 'bcm2835_emmc.o',
     'driver/fb_console.c'   : object_path + 'fb_console.o',
     'driver/fb_font_vga8x16.c'      : object_path + 'fb_font_vga8x16.o',
     
@@ -222,7 +223,7 @@ if __name__ == '__main__':
     elif sys.argv[1] == 'run':
         print('Executando o projeto...')
         if os.path.exists(project_img):
-            os.system('qemu-system-arm -kernel %s -cpu arm1176 -m 256 -M raspi' % (project_img))
+            os.system('qemu-system-arm -sd sd.img -kernel %s -cpu arm1176 -m 256 -M raspi' % (project_img))
         else:
             print('Sistema não construido!')
     elif sys.argv[1] == 'debug':

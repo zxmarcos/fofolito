@@ -16,6 +16,7 @@
 
 #define TIMER_IOBASE	0x2000B000
 #define TIMER_SIZE		0x424
+#define TIMER_IRQ		ARM_IRQ(0)
 static volatile unsigned *timer = NULL;
 
 #define REG_LOAD		(0x400 >> 2)
@@ -59,7 +60,7 @@ int bcm2835_timer_init()
 {
 	timer = ioremap(TIMER_IOBASE, TIMER_SIZE);
 
-	irq_install_service(ARM_IRQ(0), &bcm2835_timer_handler);
+	irq_install_service(TIMER_IRQ, &bcm2835_timer_handler);
 
 	/* Vamos desligar o timer antes de configurar */
 	timer[REG_CTRL] = 0x00;
