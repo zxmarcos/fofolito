@@ -7,6 +7,7 @@
  * Marcos Medeiros
  */
 #include <asm/io.h>
+#include <asm/irq.h>
 #include <kernel/printk.h>
 #include <driver/bcm2835.h>
 #include <types.h>
@@ -300,7 +301,7 @@ asm("udelay:			\n"
 	"subs	r0, r0, #1	\n"
 	"bhi	udelay		\n"
 	"mov	pc, lr		\n");
-static void udelay(unsigned cycles);
+void udelay(unsigned cycles);
 
 static int send_command(struct emmc_command *cmd)
 {
@@ -334,6 +335,18 @@ static int bcm2835_emmc_handler()
 
 void bcm2835_emmc_init()
 {
+/*
+GO_IDLE_STATE
+SD_SEND_IF_COND
+APP_CMD, SD_SEND_OP_COND (repeat until Powerup bit is set)
+ALL_SEND_CID
+SEND_RELATIVE_ADDR
+SEND_CSD
+SELECT_CARD
+SET_BLOCKLEN
+APP_CMD, SET_BUS_WIDTH
+*/
+
 	emmc_reg = ioremap(EMMC_IOBASE, EMMC_SIZE);
 	irq_install_service(EMMC_IRQ, &bcm2835_emmc_handler);
 }
