@@ -103,6 +103,7 @@ src_files = {
     'driver/bcm2835_gpio.c' : object_path + 'bcm2835_gpio.o',
     'driver/bcm2835_timer.c': object_path + 'bcm2835_timer.o',
     'driver/bcm2835_emmc.c' : object_path + 'bcm2835_emmc.o',
+    'driver/ramdisk.c'      : object_path + 'ramdisk.o',
     'driver/fb_console.c'   : object_path + 'fb_console.o',
     'driver/fb_font_vga8x16.c'      : object_path + 'fb_font_vga8x16.o',
     

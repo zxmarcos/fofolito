@@ -11,5 +11,6 @@
 #define ENODEV		1
 #define EINVPARAM	2
 #define ENOMEM		3
+#define ENOIMPL		4
 
 #endif
