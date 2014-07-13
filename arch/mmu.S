@@ -82,3 +82,19 @@ ENTRY(mmu_invpg_dcache)
 ENTRY(mmu_set_vector_base)
 	mcr		p15, 0, r0, c12, c0, 0
 	mov		pc, lr
+
+ENTRY(mmu_get_fsr)
+	mrc		p15, #0, r0, c5, c0, #0
+	mov		pc, lr
+
+ENTRY(mmu_get_far)
+	mrc		p15, #0, r0, c6, c0, #0
+	mov		pc, lr
+
+ENTRY(mmu_get_ifsr)
+	mrc		p15, #0, r0, c5, c0, #1
+	mov		pc, lr
+
+ENTRY(mmu_get_ifar)
+	mrc		p15, #0, r0, c6, c0, #2
+	mov		pc, lr

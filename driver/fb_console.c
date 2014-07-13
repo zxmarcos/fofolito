@@ -68,6 +68,7 @@ void fb_console_putc(char chr)
 				cursor_x = 0;
 				if (++cursor_y >= console_rows) {
 					cursor_y--;
+
 					/* faz a rolagem de uma linha */
 					fb_generic_scroll(dev, char_height, color_bg);
 				}

@@ -29,7 +29,7 @@ static volatile unsigned *timer = NULL;
 #define REG_PREDIV		(0x41C >> 2)
 #define REG_FREECNT		(0x420 >> 2)
 
-#define REG_CTRL_23BIT		(1 << 1)
+#define REG_CTRL_32BIT		(1 << 1)
 #define REG_CTRL_PRESCL_16	(1 << 2)
 #define REG_CTRL_PRESCL_256	(2 << 2)
 #define REG_CTRL_INTEN		(1 << 5)
@@ -40,17 +40,6 @@ static volatile unsigned *timer = NULL;
 
 static int bcm2835_timer_handler()
 {
-	static unsigned long ticks = 0;
-	static unsigned long last = 0;
-	ticks++;
-
-	unsigned long now = bcm2835_timer_read();
-	if ((now - last) >= 1000) {
-		printk("[%x] %d\n", now, ticks);
-		ticks = 0;
-		last = now;
-	}
-
 	clear_irq();
 	schedule();
 	return -EOK;
@@ -64,6 +53,7 @@ int bcm2835_timer_init()
 
 	/* Vamos desligar o timer antes de configurar */
 	timer[REG_CTRL] = 0x00;
+	clear_irq();
 	
 	/*
 	 * Vamos calcular a frequência do timer, segundo a documentação
@@ -93,15 +83,19 @@ int bcm2835_timer_init()
      *
      * interval = ms x timer_clock (em MHz)
      *
-     * Queremos 1 tick a cada 5ms, então...
+     * Queremos 1 tick a cada 50ms, então...
 	 */
-	timer[REG_RELOAD] = 5 * (timer_clock / MHz);
+	//timer[REG_RELOAD] = 50 * (timer_clock / MHz);
+	timer[REG_LOAD] = 50 * (timer_clock / MHz);
 
 	/* 
 	 * Habilita o temporalizador com um contador de 23bits, interrupções habilitadas 
      * e o contador livre também é habilitado.
 	 */
-	timer[REG_CTRL] = REG_CTRL_23BIT | REG_CTRL_INTEN | REG_CTRL_ENABLE | REG_CTRL_FRC_ENABLE;
+	timer[REG_CTRL] = REG_CTRL_32BIT | REG_CTRL_INTEN | REG_CTRL_ENABLE | REG_CTRL_FRC_ENABLE;
+
+	do_dsb();
+	
 	irq_enable_line(ARM_IRQ(0));
 	return -EOK;
 }

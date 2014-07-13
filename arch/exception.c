@@ -6,16 +6,17 @@
 #include <types.h>
 #include <errno.h>
 #include <kernel/printk.h>
+#include <asm/mmu.h>
 
 void prefetch_abort_handler()
 {
-	printk("pagefault: PABT_Handler");
+	printk("pagefault: PABT_Handler ST: 0x%x, ADDR: 0x%x\n", mmu_get_ifsr(), mmu_get_ifar());
 	for (;;);
 }
 
 void abort_handler()
 {
-	printk("pagefault: ABT_Handler");
+	printk("pagefault: ABT_Handler ST: 0x%x, ADDR: 0x%x\n", mmu_get_fsr(), mmu_get_far());
 	for (;;);
 }
 

@@ -57,7 +57,10 @@ SECTIONS {
 	}
 	. = ALIGN(4096);
 	.bss : {
+		PROVIDE(k_bss_start = .);
 		*(.bss)
+		. = ALIGN(4);
+		PROVIDE(k_bss_end = .);
 	}
 	. = ALIGN(4096);
 	/* Vamos criar as stacks para outros modos, todos com 4kb */

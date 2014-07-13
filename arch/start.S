@@ -53,7 +53,17 @@ boot_start:
 	nop
 	nop
 	nop
-	
+
+	/* Vamos limpar a seção BSS */
+	ldr		r0, =k_bss_start
+	ldr		r1, =k_bss_end
+	mov		r2, #0
+	cmp		r0, r1
+1:
+	strne	r2, [r0], #4
+	cmpne	r0, r1			
+	bne		1b
+
 	ldr		sp, =k_stack_svc
 	/* Define a stack para o modo IRQ */
 	mrs		r3, cpsr

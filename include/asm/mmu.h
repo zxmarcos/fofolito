@@ -26,6 +26,11 @@ void mmu_set_cr(uint value);
 
 void mmu_set_vector_base(void *vaddr);
 
+unsigned mmu_get_fsr();
+unsigned mmu_get_far();
+unsigned mmu_get_ifsr();
+unsigned mmu_get_ifar();
+
 void mmu_flush_tlb();
 void mmu_flush_icash();
 void mmu_flush_dcash();

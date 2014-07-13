@@ -22,7 +22,7 @@
 
 extern void simple_delay(int ticks);
 
-#define DELAY	0x3f0000
+#define DELAY	0x2f0000
 
 void mm_init()
 {
@@ -42,7 +42,7 @@ static inline void led_blink()
 void kernel_info()
 {
 	printk("FOFOLITO - Sistema Operacional para RaspberryPi\n");
-	printk("Desenvolvido por Marcos Medeiros\n");
+	printk("Desenvolvido por Marcos Medeiros, %s\n", __DATE__);
 	pages_info();
 }
 
@@ -51,10 +51,7 @@ extern void ret_from_fork();
 
 static void test_task() {
 	for (;;) {
-#if 0
-		printk("%d:", sched_current_pid());
-		//simple_delay(DELAY);
-#endif
+		printk("%d-", sched_current_pid());
 	}
 }
 
@@ -76,6 +73,7 @@ struct task *create_task(const char *name, int pid)
 void init_task()
 {
 	create_task("a", 5);
+	create_task("a", 7);
 }
 
 void kmain()
@@ -100,12 +98,10 @@ void kmain()
 	sched_init();
 	init_task();
 
-	/* Agora habilitamos as interrupções */
-	//irq_enable();
+	irq_enable();
 
 	/* Fica de boas esperando as trocas de contexto */
 	for (;;) {
 		led_blink();
-		//asm("wfi");
 	}
 }

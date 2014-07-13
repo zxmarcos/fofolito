@@ -75,7 +75,7 @@ clear_pgdir$:
 	/* Mapeia as páginas do kernel
 	 * r0 = pgdir
 	 * r1 = entrada na pgdir para o PAGE_OFFSET
-	 * r2 = numeros de entradas para mapear,
+	 * r2 = numeros de entradas para mapear
 	 *      Cada entrada mapeia 1MB de memória.
 	 * r3 = enderço física da seção a mapear (1MB cada)
 	 * r4 = atributos da entrada do kernel do pgdir
@@ -107,7 +107,7 @@ map_next$:
 	blo		map_next$
 
 	/* Antes de habilitar a MMU, vamos configurar o domínio */
-	mvn		r0, #0
+	ldr		r0, =0x55555555
 	mcr		p15, 0, r0, c3, c0, 0
 	/* Vamos setar o endereço da ttbr */
 	ldr		r0, =PA(k_init_pgdir)

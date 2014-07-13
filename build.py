@@ -19,7 +19,7 @@ project_name = 'kernel'
 project_img = project_name + '.img'
 
 # Flag para compilar uma imagem que rode no QEMU
-emulator_version = False
+emulator_version = True
 debug_version = False
 
 # =============================================================================

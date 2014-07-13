@@ -11,6 +11,7 @@
 #include <asm/asm.h>
 #include <asm/io.h>
 #include <asm/context.h>
+#include <asm/barrier.h>
 #include <errno.h>
 #include <kernel/printk.h>
 
@@ -18,7 +19,7 @@
 #define GPU_IRQ_MAX	64
 #define ARM_IRQ_MAX	8
 
-#define IRQ_SIZE	0x30
+#define IRQ_SIZE	0x228
 #define IRQ_IOBASE	0x2000B000
 
 static volatile unsigned *irqregs = NULL;
@@ -40,11 +41,11 @@ static volatile unsigned *irqregs = NULL;
 #define GPU_PENDING_2	(1 << 9)
 
 /* Tabela com os serviços para IRQs */
-irq_service_t arm_irq_service_table[ARM_IRQ_MAX] = {
+static irq_service_t arm_irq_service_table[ARM_IRQ_MAX] = {
 	NULL
 };
 
-irq_service_t gpu_irq_service_table[GPU_IRQ_MAX] = {
+static irq_service_t gpu_irq_service_table[GPU_IRQ_MAX] = {
 	NULL
 };
 
@@ -93,7 +94,8 @@ static inline void gpu_irq_handler_1()
 		int i = 0;
 		while ((i < 32) && val) {
 			if (val & 1) {
-				gpu_irq_service_table[i]();
+				if (gpu_irq_service_table[i])
+					gpu_irq_service_table[i]();
 			}
 			val >>= 1;
 			i++;
@@ -108,7 +110,8 @@ static inline void gpu_irq_handler_2()
 		int i = 0;
 		while ((i < 32) && val) {
 			if (val & 1) {
-				gpu_irq_service_table[32 + i]();
+				if (gpu_irq_service_table[32 + i])
+					gpu_irq_service_table[32 + i]();
 			}
 			val >>= 1;
 			i++;
@@ -183,7 +186,7 @@ void irq_enable_line(uint irq)
 		gpu_irq_enable_line(irq & ~GPU_IRQ_FLAG);
 	else {
 		arm_irq_enable_line(irq);
-		printk("Habilitando interrupcao ARM %d\n", irq);
+		//printk("Habilitando interrupcao ARM %d\n", irq);
 	}
 }
 
@@ -209,16 +212,17 @@ int irq_install_service(uint irq, irq_service_t service)
  */
 void irq_handler()
 {
-	static int counter = 0;
+	/* Sincroniza todas as escritas na memória */
+	do_dsb();
+
 	uint val = irqregs[REG_IRQBPEN];
-#if 0	
-	printk("IRQ %d\n", counter++);
-#endif
-	int i = 0;
+
 	/* Despacha as interrupções vindas pelo ARM */
-	for (; i < ARM_IRQ_MAX; i++) {
-		if (val & (1 << i))
-			arm_irq_service_table[i]();
+	for (int i = 0; i < ARM_IRQ_MAX; i++) {
+		if (val & (1 << i)) {
+			if (arm_irq_service_table[i])
+				arm_irq_service_table[i]();
+		}
 	}
 
 	if (val & GPU_PENDING_1)
@@ -231,12 +235,12 @@ void irq_handler()
 void irq_init()
 {
 	irqregs = ioremap(IRQ_IOBASE, IRQ_SIZE);
-	int i = 0;
-	for (; i < GPU_IRQ_MAX; i++) {
+	
+	for (int i = 0; i < GPU_IRQ_MAX; i++) {
 		gpu_irq_service_table[i] = &gpu_isr_default;
 		gpu_irq_disable_line(i);
 	}
-	for (; i < ARM_IRQ_MAX; i++) {
+	for (int i = 0; i < ARM_IRQ_MAX; i++) {
 		arm_irq_service_table[i] = &arm_isr_default;
 		arm_irq_disable_line(i);
 	}
