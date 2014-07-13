@@ -14,13 +14,22 @@
 
 .global pre_init
 pre_init:
+	/* Para verificarmos se o boot está acontecendo, vamos acender o LEDOK */
+	ldr		r0, =0x20200000
+	mov		r1, #1
+	lsl		r1, #18
+	str		r1, [r0, #4]
+	mov		r1, #1
+	lsl		r1, #16
+	str		r1, [r0, #40]
+
 	/* Primeiro, desabilitamos todas as interrupções */
 	mrs		r0, cpsr
 	orr		r0, #(CPSR_IRQ_DISABLE | CPSR_FIQ_DISABLE)
 	msr		cpsr, r0
 
 	/* Configuramos uma stack temporária */
-	ldr		sp, =PA(k_tmp_stack)	
+	ldr		sp, =k_tmp_stack	
 
 	/* 
 	 * Primeiro vamos limpar o diretório de páginas, temos 4096 entradas
@@ -66,7 +75,7 @@ clear_pgdir$:
 	/* Mapeia as páginas do kernel
 	 * r0 = pgdir
 	 * r1 = entrada na pgdir para o PAGE_OFFSET
-	 * r2 = numeros de entradas para mapear STATIC_MEM,
+	 * r2 = numeros de entradas para mapear,
 	 *      Cada entrada mapeia 1MB de memória.
 	 * r3 = enderço física da seção a mapear (1MB cada)
 	 * r4 = atributos da entrada do kernel do pgdir
@@ -74,7 +83,7 @@ clear_pgdir$:
 	 */
 	ldr		r0, =PA(k_init_pgdir)
 	ldr		r1, =(PAGE_OFFSET >> PGT_SHIFT)
-	ldr		r2, =(STATIC_MEM >> PGT_SHIFT)
+	ldr		r2, =(0x40000000 >> PGT_SHIFT)
 	mov		r3, #0
 	ldr		r4, =K_PGT_SECTION
 	ldr		r7, =(1024 * 1024)
@@ -98,7 +107,7 @@ map_next$:
 	blo		map_next$
 
 	/* Antes de habilitar a MMU, vamos configurar o domínio */
-	ldr		r0, =0x55555555
+	mvn		r0, #0
 	mcr		p15, 0, r0, c3, c0, 0
 	/* Vamos setar o endereço da ttbr */
 	ldr		r0, =PA(k_init_pgdir)
@@ -107,18 +116,17 @@ map_next$:
 	mov		r0, #0
 	mcr		p15, 0, r0, c2, c0, 2
 
+	ldr		r10, =boot_start
 	/* Vamos habilitar a MMU */
-	ldr		r0, =(MMU_ENABLE | MMU_XP | MMU_WRBUF | MMU_ALIGN)
+	ldr		r0, =(MMU_ENABLE | MMU_XP)
+	mcr		p15, 0, r0, c7, c5, 4 /* sincroniza */
 	mcr		p15, 0, r0, c1, c0, 0
-
-	/* Libera todos os caches */
-	mov		r0, #0
-	mcr		p15, 0, r0, c8, c7, 0
-	mcr		p15, 0, r0, c8, c5, 0
-	mcr		p15, 0, r0, c8, c6, 0
+	mcr		p15, 0, r0, c7, c5, 4 /* sincroniza */
+	mov		r0, r0
+	mov		r0, r10
 
 	/* Agora estamos prontos para ir ao HigherHalf \o\ */
-	ldr		pc, =boot_start
+	mov		pc, r0
 /*
  * Função copiada e minimizada de lib/memory_s.S 
  * Só copia blocos alinhados em 4bytes

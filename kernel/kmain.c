@@ -95,7 +95,7 @@ void kmain()
 	fb_console_init();
 	kernel_info();
 
-	bcm2835_emmc_init();
+	//bcm2835_emmc_init();
 
 	sched_init();
 	init_task();
@@ -105,6 +105,7 @@ void kmain()
 
 	/* Fica de boas esperando as trocas de contexto */
 	for (;;) {
-		asm("wfi");
+		led_blink();
+		//asm("wfi");
 	}
 }

@@ -6,7 +6,7 @@ SECTIONS {
 	 * O código que carrega nosso kernel no endereço correto,
 	 * ele precisa estar linkado no endereço físico.
 	 */
-	.stext 0x00000 : AT(0x00000) {
+	.stext 0x8000 : AT(0x8000) {
 		obj/init.o
 	}
 

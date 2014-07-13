@@ -24,11 +24,10 @@ ENTRY(mmu_get_dom)
 	mov		pc, lr
 
 ENTRY(mmu_set_ttbr)
+	mov		r1, #0
+	mcr		p15, 0, r1, c7, c5, 6
+	mcr		p15, 0, r1, c7, c10, 4
 	mcr		p15, 0, r0, c2, c0, 0
-	mov		r0, #0
-	mcr		p15, 0, r0, c2, c0, 1
-	/* Inválida o tlb imediatamente */
-	mcr		p15, 0, r0, c8, c7, 0
 	mov		pc, lr
 
 ENTRY(mmu_set_ttbcr)

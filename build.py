@@ -19,8 +19,8 @@ project_name = 'kernel'
 project_img = project_name + '.img'
 
 # Flag para compilar uma imagem que rode no QEMU
-emulator_version = True
-debug_version = True
+emulator_version = False
+debug_version = False
 
 # =============================================================================
 # Definicoes padroes para a toolchain

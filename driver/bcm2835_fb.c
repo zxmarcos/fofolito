@@ -59,14 +59,14 @@ static uint bcm2835_fb_modeset(struct fbdev *dev, const struct fbdev_mode *mode)
 	/* É necessário tentar algumas vezes até que nossa solicitação
 	 * seja atendida pela videocore.
 	 */
-	//do {
+	do {
 		do_dsb();
 		/* Envia uma mensagem para a Videocore informando sobre o nosso modo */
 		bcm2835_mbox_write(MBOX_CHANNEL_FB, __pa(&msgfb));
 		/* Espera a resposta */
 		bcm2835_mbox_read(MBOX_CHANNEL_FB);
 		do_dmb();
-	//} while (msgfb.baseptr == 0);
+	} while (msgfb.baseptr == 0);
 
 	dev->width = msgfb.width;
 	dev->height = msgfb.height;
