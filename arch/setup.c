@@ -41,9 +41,11 @@ void arch_early_init()
 
 /* Configura os drivers da plataforma */
 void arch_setup()
-{	
+{
+	/* É importante que o timer seja inicializado primeiro */
+	bcm2835_timer_init();
+
 	bcm2835_mbox_init();
 	bcm2835_fb_init();
 	bcm2835_gpio_init();
-	bcm2835_timer_init();
 }
