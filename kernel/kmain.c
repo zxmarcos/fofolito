@@ -70,12 +70,6 @@ struct task *create_task(const char *name, int pid)
 	return tsk;
 }
 
-void init_task()
-{
-	create_task("a", 5);
-	create_task("a", 7);
-}
-
 void kmain()
 {
 	irq_disable();
@@ -84,22 +78,25 @@ void kmain()
 	 * de memória.
 	 */
 	mm_init();
-	
-	platform_setup();
+	arch_early_init();
+	ioremap_init();
+	irq_init();
+	sched_init();
+	/* 
+	 * Neste momento temos o gerenciador de memória e escalonador prontos,
+	 * já podemos habilitar as interrupções, que podem ser utilizadas
+	 * pelos drivers.
+	 */
+	irq_enable();
+
+	/* Inicia os drivers da plataforma */
+	arch_setup();
 
 	/* Requisita um modo se existir um framebuffer*/
 	fb_set_mode();
 	/* Inicia o console sobre o framebuffer */
 	fb_console_init();
 	kernel_info();
-
-	//bcm2835_emmc_init();
-
-	sched_init();
-	init_task();
-
-	irq_enable();
-
 	/* Fica de boas esperando as trocas de contexto */
 	for (;;) {
 		led_blink();

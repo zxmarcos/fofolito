@@ -34,13 +34,14 @@ void high_vectors_setup()
 	mmu_set_vector_base(hivec);
 }
 
-
-/* Configura os drivers da plataforma */
-void platform_setup()
+void arch_early_init()
 {
 	high_vectors_setup();
-	ioremap_init();
-	irq_init();
+}
+
+/* Configura os drivers da plataforma */
+void arch_setup()
+{	
 	bcm2835_mbox_init();
 	bcm2835_fb_init();
 	bcm2835_gpio_init();
