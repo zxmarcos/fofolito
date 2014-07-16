@@ -71,6 +71,7 @@
 
 #define CPSR_IRQ_DISABLE	0x80
 #define CPSR_FIQ_DISABLE	0x40
+#define CPSR_INT_DISABLE	(CPSR_FIQ_DISABLE | CPSR_IRQ_DISABLE)
 
 #ifndef __ASSEMBLER__
 /* Macros úteis para converter endereços físicos e virtuais */

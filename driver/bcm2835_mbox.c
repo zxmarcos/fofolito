@@ -4,13 +4,15 @@
  *
  * Marcos Medeiros
  */
-#include <types.h>
 #include <asm/io.h>
+#include <asm/irq.h>
 #include <driver/bcm2835.h>
 #include <errno.h>
+#include <types.h>
 
 #define MBOX_IOBASE	0x2000B880
 #define MBOX_SIZE	0x24
+#define MBOX_IRQ	ARM_IRQ(1)
 
 /* A mailbox é mapeada nesse endereço de memória */
 volatile unsigned *mbox_reg = NULL;
@@ -18,15 +20,25 @@ volatile unsigned *mbox_reg = NULL;
 /* Registradores da MAILBOX */
 #define REG_READ	(0x00 >> 2)
 #define REG_STATUS	(0x18 >> 2)
+#define REG_CONFIG	(0x1C >> 2)
 #define REG_WRITE	(0x20 >> 2)
 
 /* Alguns bits do registrado de STATUS */
 #define MBOX_FULL	0x80000000	
 #define MBOX_EMPTY	0x40000000
 
+static int bcm2835_mbox_handler()
+{
+	printk("mbox_irq\n");
+	return -EOK;
+}
+
 int bcm2835_mbox_init()
 {
 	mbox_reg = ioremap(MBOX_IOBASE, MBOX_SIZE);
+	irq_install_service(MBOX_IRQ, &bcm2835_mbox_handler);
+	/* TODO: habilitar as irqs no registrador CONFIG */
+	irq_enable_line(MBOX_IRQ);
 	return -EOK;
 }
 
