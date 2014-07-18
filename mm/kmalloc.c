@@ -17,6 +17,7 @@
 #include <kernel/mm.h>
 #include <kernel/printk.h>
 #include <kernel/list.h>
+#include <kernel/spinlock.h>
 #include <errno.h>
 
 #define DEBUG_KMALLOC   0
@@ -61,6 +62,9 @@
  * que requisitamos ao alocador de páginas.
  */
 struct list_head heap_head = LIST_HEAD_INIT(heap_head);
+
+/* Nosso lock */
+static spinlock_t kmalloc_lock;
 
 /*
  * Cada página contém 3 listas, a primeira é a lista de páginas requisitadas
@@ -296,6 +300,7 @@ int kmalloc_init()
     /* Adiciona a página a nossa lista */
     list_add(&pd->list, &heap_head);
     setup_page_descr(pd);
+    spin_lock_init(&kmalloc_lock);
     return 0;
 }
 
@@ -323,13 +328,18 @@ void *kmalloc(unsigned int size)
     if (size >= (sizeof(blkdescr_t) + PAGE_SIZE - sizeof(pgdescr_t)))
         return NULL;
 
+    /* 
+     * Este código não é reentrante e é crítico.
+     * Apenas uma thread pode executa-lo por vez.
+     */
+    spin_lock(&kmalloc_lock);
+
 try_again:
     list_foreach(pg_pos, &heap_head) {
         pgdescr_t *pd = list_entry(pg_pos, pgdescr_t, list);
         /* Heap corrompido? */
-        if (!is_valid_page(pd)) {
-            return NULL;
-        }
+        if (!is_valid_page(pd))
+            goto failed;
 
         /* Verifica se temos espaço nessa página para alocar */
         if (pd->available >= size) {
@@ -337,16 +347,18 @@ try_again:
             /* Percorremos a lista de blocos livres */
             list_foreach_safe(blk_pos, blk_pos_safe, &pd->free) {
                 blkdescr_t *blk = list_entry(blk_pos, blkdescr_t, list);
-                if (!is_valid_block(blk)) {
-                    return NULL;
-                }
+                if (!is_valid_block(blk))
+                    goto failed;
+                
                 if (blk->size >= size) {
                     if (!break_block(blk, size)) {
                         /*
                          * NOTA: A partir desse momento, não podemos mais
                          * continuar iterando a lista, pois essa entrada não
                          * pertence mais a lista de livres.
+                         * Antes de retornar, temos que liberar o lock.
                          */
+                        spin_unlock(&kmalloc_lock);
                         return block_to_ptr(blk);
                     }
                 }
@@ -359,15 +371,17 @@ try_again:
      * alocar mais páginas de memória.
      */
     page = (pgdescr_t *) __get_free_pages(1);
-    if (!page) {
-        return NULL;
-    }
+    if (!page)
+        goto failed;
+    
     /* Adiciona a página a nossa lista */
     list_add(&page->list, &heap_head);
     setup_page_descr(page);
     /* Tentamos alocar novamente :) */
     goto try_again;
 
+failed:
+    spin_unlock(&kmalloc_lock);
     return NULL;
 }
 
