@@ -9,6 +9,7 @@
 #include <kernel/fb.h>
 #include <kernel/printk.h>
 #include <kernel/sched.h>
+#include <kernel/semaphore.h>
 #include <driver/fb_console.h>
 #include <driver/bcm2835.h>
 #include <asm/page.h>
@@ -49,9 +50,14 @@ void kernel_info()
 
 extern void ret_from_fork();
 
+static struct semaphore sem;
 static void test_task() {
+	int pid = sched_current_pid();
 	for (;;) {
-		printk("%d-", sched_current_pid());
+		down(&sem);
+		printk("%d", pid);
+		simple_delay(DELAY);
+		up(&sem);
 	}
 }
 
@@ -97,8 +103,15 @@ void kmain()
 	/* Inicia o console sobre o framebuffer */
 	fb_console_init();
 	kernel_info();
+
+	irq_disable();
+	semaphore_init(&sem, 1);
+	create_task("a", 4);
+	create_task("b", 5);
+	irq_enable();
 	/* Fica de boas esperando as trocas de contexto */
 	for (;;) {
 		led_blink();
+		printk("-");
 	}
 }

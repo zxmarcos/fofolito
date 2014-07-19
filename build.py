@@ -20,7 +20,7 @@ project_img = project_name + '.img'
 
 # Flag para compilar uma imagem que rode no QEMU
 emulator_version = True
-debug_version = False
+debug_version = True
 
 # =============================================================================
 # Definicoes padroes para a toolchain
@@ -32,9 +32,9 @@ defines_list =  (' '.join([ '-D'+d for d in defines ]))
 toolchain = '/opt/gcc-arm/bin/arm-none-eabi-'
 c_compiler = toolchain + 'gcc'
 cpu_model = '-mcpu=arm926ej-s'
-c_flags = '-Iinclude -mcpu=arm1176jzf-s -marm -Wno-unused-function -Wall -Wextra -nostartfiles -ffreestanding -nodefaultlibs -nostdinc -nostdlib -ffreestanding -fno-builtin -fomit-frame-pointer -std=gnu99 -c '  + defines_list
+c_flags = '-Iinclude -mcpu=arm1176jzf-s -marm -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable -Wall -Wextra -nostartfiles -ffreestanding -nodefaultlibs -nostdinc -nostdlib -ffreestanding -fno-builtin -fomit-frame-pointer -std=gnu99 -c '  + defines_list
 if debug_version:
-    c_flags = c_flags + ' -g'
+    c_flags = c_flags + ' -g -O3'
 else:
     c_flags = c_flags + ' -O3'
 asm_compiler = toolchain + 'as'
@@ -92,6 +92,7 @@ src_files = {
     'kernel/fb.c'           : object_path + 'fb.o',
     'kernel/printk.c'       : object_path + 'printk.o',
     'kernel/sched.c'       : object_path + 'sched.o',
+    'kernel/semaphore.c'       : object_path + 'semaphore.o',
     'mm/mm.c'               : object_path + 'mm.o',
     'mm/kmalloc.c'          : object_path + 'kmalloc.o',
     'mm/paging.c'           : object_path + 'paging.o',

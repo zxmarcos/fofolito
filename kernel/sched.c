@@ -6,7 +6,9 @@
  * Marcos Medeiros
  */
 #include <asm/thread.h>
+#include <asm/irq.h>
 #include <kernel/task.h>
+#include <kernel/sched.h>
 #include <kernel/list.h>
 #include <types.h>
 #include <errno.h>
@@ -27,6 +29,11 @@ int sched_current_pid()
 	if (current_task)
 		return current_task->pid;
 	return 0;
+}
+
+struct task *sched_current_task()
+{
+	return current_task;
 }
 
 #define RQ_NEXT_TASK()	list_entry(run_queue.next, struct task, list)
@@ -82,6 +89,15 @@ int sched_add_task(struct task *tsk)
 	}
 	list_add_tail(&tsk->list, &run_queue);
 	return -EOK;
+}
+
+void sched_yield()
+{
+	unsigned flags;
+
+	irq_save_state(flags);
+	schedule();
+	irq_restore_state(flags);
 }
 
 /*
