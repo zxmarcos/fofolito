@@ -54,7 +54,7 @@ static inline void atomic_increment(int *ptr)
 
 static inline void atomic_decrement(int *ptr) 
 {
-	without_interrupts((*ptr)++);
+	without_interrupts((*ptr)--);
 }
 
 #endif
