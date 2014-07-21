@@ -12,5 +12,6 @@
 
 void arch_early_init();
 void arch_setup();
+int timer_init();
 
 #endif

@@ -53,9 +53,10 @@ extern void ret_from_fork();
 static struct semaphore sem;
 static void test_task() {
 	int pid = sched_current_pid();
+	int counter = 0;
 	for (;;) {
 		down(&sem);
-		printk("%d", pid);
+		printk("process %d: %d\n", pid, counter++);
 		simple_delay(DELAY);
 		up(&sem);
 	}
@@ -88,6 +89,7 @@ void kmain()
 	ioremap_init();
 	irq_init();
 	sched_init();
+	timer_init();
 	/* 
 	 * Neste momento temos o gerenciador de memória e escalonador prontos,
 	 * já podemos habilitar as interrupções, que podem ser utilizadas
@@ -108,6 +110,10 @@ void kmain()
 	semaphore_init(&sem, 1);
 	create_task("a", 4);
 	create_task("b", 5);
+	create_task("c", 6);
+	create_task("d", 7);
+	create_task("b", 8);
+	create_task("b", 9);
 	irq_enable();
 	/* Fica de boas esperando as trocas de contexto */
 	for (;;) {

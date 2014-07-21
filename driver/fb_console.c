@@ -38,11 +38,22 @@ int fb_console_init()
 	cursor_y = 0;
 	font = &font_vga_8x16;
 	console_columns = dev->width / font->width;
-	console_rows = dev->height / font->height;
+	console_rows = (dev->height / font->height) - 2;
 	char_width = font->width;
 	char_height = font->height;
+#if 0
 	color_bg = dev->maprgb(dev, 0, 0, 0);
 	color_fg = dev->maprgb(dev, 200, 200, 200);
+#else
+	color_fg = dev->maprgb(dev, 0, 0, 0);
+	color_bg = dev->maprgb(dev, 255, 255, 255);
+#endif
+	struct fbdev_rect r;
+	r.x = 0;
+	r.y = 0;
+	r.w = dev->width;
+	r.h = dev->height - 10;
+	fb_generic_rectfill(dev, &r, color_bg);
 	return -EOK;
 }
 
