@@ -19,8 +19,8 @@ project_name = 'kernel'
 project_img = project_name + '.img'
 
 # Flag para compilar uma imagem que rode no QEMU
-emulator_version = False
-debug_version = False
+emulator_version = True
+debug_version = True
 
 # =============================================================================
 # Definicoes padroes para a toolchain
@@ -231,7 +231,7 @@ if __name__ == '__main__':
     elif sys.argv[1] == 'debug':
         print('Debuggando o projeto...')
         if os.path.exists(project_img):
-            os.system('qemu-system-arm -s -S -kernel %s -cpu arm1176 -m 256 -M raspi'  % 'kernel.elf')#(project_img))
+            os.system('qemu-system-arm -sd sd.img -s -S -kernel %s -cpu arm1176 -m 256 -M raspi'  % 'kernel.elf')#(project_img))
         else:
             print('Sistema não construido!')
     elif sys.argv[1] == 'copy':

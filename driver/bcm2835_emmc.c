@@ -214,6 +214,8 @@ struct emmc_command {
 	unsigned arg;
 	unsigned rsp0;
 	unsigned rsp1;
+	unsigned rsp2;
+	unsigned rsp3;
 };
 
 #define RSP_NONE	0
@@ -303,14 +305,22 @@ asm("udelay:			\n"
 	"mov	pc, lr		\n");
 void udelay(unsigned cycles);
 
+/* Envia um comando normal */
 static int send_command(struct emmc_command *cmd)
 {
-	unsigned pkt;
+	unsigned pkt, rsp_type;
 	if (!cmd)
 		return -EINVPARAM;
 
+	/* Limpa as respostas anteriores */
+	cmd->rsp0 = 0;
+	cmd->rsp1 = 0;
+	cmd->rsp2 = 0;
+	cmd->rsp3 = 0;
+
+	rsp_type = emmc_command_flags[cmd->opcode & 0x3F].resp_type;
 	pkt = TM_CMD_INDEX(cmd->opcode);
-	pkt = pkt | emmc_command_flags[cmd->opcode & 0x3F].resp_type;
+	pkt = pkt | rsp_type;
 
 	/* Espera até podermos enviar o comando */
 	while (1) {
@@ -325,6 +335,102 @@ static int send_command(struct emmc_command *cmd)
 	emmc_reg[REG_ARG1] = cmd->arg;
 	emmc_reg[REG_CMDTM] = pkt;
 
+	while (1) {
+		unsigned status = emmc_reg[REG_STATUS];
+		if (status & (ST_CMD_INHIBIT | ST_DAT_INHIBIT)) {
+			udelay(100);
+			continue;
+		}
+		break;
+	}
+
+	/* Lê as respostas */
+	switch (rsp_type) {
+		/* respostas de 136bits */
+		case RSP_R2:	/* R4 */
+			cmd->rsp0 = emmc_reg[REG_RESP0];
+			cmd->rsp1 = emmc_reg[REG_RESP1];
+			cmd->rsp2 = emmc_reg[REG_RESP2];
+			cmd->rsp3 = emmc_reg[REG_RESP3];
+			break;
+			
+		default:
+			cmd->rsp0 = emmc_reg[REG_RESP0];
+			break;
+
+	}
+	return -EOK;
+}
+
+static int send_app_command(struct emmc_command *cmd)
+{
+	struct emmc_command acmd;
+	acmd.opcode = CMD_APP_CMD;
+	acmd.arg = 0;
+	send_command(&acmd);
+	send_command(cmd);
+	return -EOK;
+}
+
+/* Envia um comando de transferência */
+static int send_transfer_command(struct emmc_command *cmd, int write)
+{
+	unsigned pkt, rsp_type;
+	if (!cmd)
+		return -EINVPARAM;
+
+	/* Limpa as respostas anteriores */
+	cmd->rsp0 = 0;
+	cmd->rsp1 = 0;
+	cmd->rsp2 = 0;
+	cmd->rsp3 = 0;
+
+	rsp_type = emmc_command_flags[cmd->opcode & 0x3F].resp_type;
+	pkt = TM_CMD_INDEX(cmd->opcode);
+	pkt = pkt | rsp_type | TM_DATATRANSFER;
+
+	if (write)
+		pkt |= TM_DIR_HOST2CARD;
+	else
+		pkt |= TM_DIR_CARD2HOST;
+
+	/* Espera até podermos enviar o comando */
+	while (1) {
+		unsigned status = emmc_reg[REG_STATUS];
+		if (status & (ST_CMD_INHIBIT | ST_DAT_INHIBIT)) {
+			udelay(100);
+			continue;
+		}
+		break;
+	}
+
+	emmc_reg[REG_ARG1] = cmd->arg;
+	emmc_reg[REG_CMDTM] = pkt;
+
+	while (1) {
+		unsigned status = emmc_reg[REG_STATUS];
+		if (status & (ST_CMD_INHIBIT | ST_DAT_INHIBIT)) {
+			udelay(100);
+			continue;
+		}
+		break;
+	}
+
+	/* Lê as respostas */
+	switch (rsp_type) {
+		/* respostas de 136bits */
+		case RSP_R2:	/* R4 */
+			cmd->rsp0 = emmc_reg[REG_RESP0];
+			cmd->rsp1 = emmc_reg[REG_RESP1];
+			cmd->rsp2 = emmc_reg[REG_RESP2];
+			cmd->rsp3 = emmc_reg[REG_RESP3];
+			break;
+			
+		default:
+			cmd->rsp0 = emmc_reg[REG_RESP0];
+			break;
+
+	}
 	return -EOK;
 }
 
@@ -333,20 +439,128 @@ static int bcm2835_emmc_handler()
 	return -EOK;
 }
 
+static void decode_cid(struct emmc_command *cmd)
+{
+	char name[6];
+	struct cid_format {
+		unsigned mdt : 12;
+		unsigned     : 4;
+		unsigned psn : 32;
+		unsigned prv : 8;
+		unsigned pnm_lo : 32;
+		unsigned pnm_hi : 8;
+		unsigned oid : 16;
+		unsigned mid : 8;
+	} __attribute__((packed));
+
+	struct cid_format *fmt = (struct cid_format *) &cmd->rsp0;
+
+	name[0] = fmt->pnm_hi & 0xFF;
+	name[1] = (fmt->pnm_lo & 0xFF000000) >> 24;
+	name[2] = (fmt->pnm_lo & 0xFF0000) >> 16;
+	name[3] = (fmt->pnm_lo & 0xFF00) >> 8;
+	name[4] = (fmt->pnm_lo & 0xFF);
+	name[5] = '\0';
+
+	//printk("CRC %x\n", fmt->crc);
+	printk("MDT %x\n", fmt->mdt);
+	printk("PSN %x\n", fmt->psn);
+	printk("PRV %x\n", fmt->prv);
+	printk("PNM %s\n", name);
+	printk("OID %x\n", fmt->oid);
+	printk("MID %x\n", fmt->mid);
+}
+
+
+static unsigned card_rca = 0;
+static void read_test()
+{
+	struct emmc_command pkt;
+	unsigned status = 0;
+
+	printk("READ_BEGIN:\n");
+	/* Define o tamanho do bloco */
+	pkt.opcode = CMD_SET_BLOCKLEN;
+	pkt.arg = 512;
+	send_command(&pkt);
+
+	pkt.opcode = CMD_READ_SINGLE_BLOCK;
+	pkt.arg = 0;
+	send_transfer_command(&pkt, 0);
+
+	status = emmc_reg[REG_STATUS];
+
+	int counter = 0;
+	while (status & (1 << 11)) {
+		unsigned data = emmc_reg[REG_DATA];
+		printk("%X ", data);
+		status = emmc_reg[REG_STATUS];
+		if (counter++ >= 10) {
+			printk("\n");
+			counter = 0;
+		}
+	}
+
+	printk("\nREAD_END;\n");
+}
+
+static void init_sequence()
+{
+	unsigned rca = 0;
+	struct emmc_command pkt;
+	pkt.opcode = CMD_GO_IDLE_STATE;
+	pkt.arg = 0;
+	send_command(&pkt);
+
+	/* Envia as condições de operação e um padrão de verificação */
+	pkt.opcode = CMD_SEND_IF_COND;
+	pkt.arg = 0x13 | (1 << 8);
+	send_command(&pkt);
+
+	/* Verifica o padrão */
+	if ((pkt.rsp0 & 0xFF) != 0x13)
+		return;
+
+	/* Envia a voltagem para operar entre 3.2V e 3.4V */
+	pkt.opcode = ACMD_SEND_OP_COND;
+	pkt.arg = OCR_VDD_32_33 | OCR_VDD_33_34;
+	do {
+		send_app_command(&pkt);
+		udelay(100);
+	} while (!(pkt.rsp0 & 0x80000000));
+
+	/* Pede ao cartão que envie suas informações */
+	pkt.opcode = CMD_ALL_SEND_CID;
+	pkt.arg = 0;
+	send_command(&pkt);
+	decode_cid(&pkt);
+
+	/* Pede ao cartão o RCA */
+	pkt.opcode = CMD_SEND_RELATIVE_ADDR;
+	pkt.arg = 0;
+	send_command(&pkt);
+
+	rca = (pkt.rsp0 >> 16) & 0xFFFF;
+	printk("RCA %x\n", rca);
+
+	/* Seleciona o cartão */
+	pkt.opcode = CMD_SELECT_DESELECT_CARD;
+	pkt.arg = rca << 16;
+	send_command(&pkt);
+
+	/* Verifica o status atual, esperamos que esteja em trans :) */
+	pkt.opcode = CMD_SEND_STATUS;
+	send_command(&pkt);
+
+	printk("CS %x %s\n", pkt.rsp0, card_status_name[CS_CURRENT_STATE(pkt.rsp0)]);
+
+	card_rca = rca;
+}
+
 void bcm2835_emmc_init()
 {
-/*
-GO_IDLE_STATE
-SD_SEND_IF_COND
-APP_CMD, SD_SEND_OP_COND (repeat until Powerup bit is set)
-ALL_SEND_CID
-SEND_RELATIVE_ADDR
-SEND_CSD
-SELECT_CARD
-SET_BLOCKLEN
-APP_CMD, SET_BUS_WIDTH
-*/
-
 	emmc_reg = ioremap(EMMC_IOBASE, EMMC_SIZE);
 	irq_install_service(EMMC_IRQ, &bcm2835_emmc_handler);
+	init_sequence();
+	read_test();
 }

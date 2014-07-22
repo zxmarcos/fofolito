@@ -7,7 +7,7 @@
 
 #include <kernel/list.h>
 
-#define BLOCK_SIZE	1024
+#define BLOCK_SIZE	512
 
 struct block_dev {
 	struct list_head list;

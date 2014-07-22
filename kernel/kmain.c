@@ -106,6 +106,7 @@ void kmain()
 	fb_console_init();
 	kernel_info();
 
+#if 0
 	irq_disable();
 	semaphore_init(&sem, 1);
 	create_task("a", 4);
@@ -116,8 +117,11 @@ void kmain()
 	create_task("b", 9);
 	irq_enable();
 	/* Fica de boas esperando as trocas de contexto */
+#endif
+	/* Como queremos imprimir para depuração do driver, inicializamos ele agora */
+	bcm2835_emmc_init();
 	for (;;) {
 		led_blink();
-		printk("-");
+		//printk("-");
 	}
 }
