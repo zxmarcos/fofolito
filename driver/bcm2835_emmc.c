@@ -559,7 +559,7 @@ static void init_sequence()
 
 void bcm2835_emmc_init()
 {
-	emmc_reg = ioremap(EMMC_IOBASE, EMMC_SIZE);
+	emmc_reg = mmio_address(EMMC_IOBASE);
 	irq_install_service(EMMC_IRQ, &bcm2835_emmc_handler);
 	init_sequence();
 	read_test();

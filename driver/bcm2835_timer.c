@@ -4,15 +4,15 @@
  * No manuais é dito que é um ap804 modificado.
  * Marcos Medeiros
  */
+#include <asm/barrier.h>
+#include <asm/io.h>
+#include <asm/irq.h>
+#include <asm/platform.h>
 #include <kernel/printk.h>
 #include <kernel/sched.h>
-#include <asm/irq.h>
-#include <asm/io.h>
-#include <asm/platform.h>
-#include <asm/barrier.h>
 #include <driver/bcm2835.h>
-#include <types.h>
 #include <errno.h>
+#include <types.h>
 
 #define TIMER_IOBASE	0x2000B000
 #define TIMER_SIZE		0x424
@@ -47,7 +47,7 @@ static int bcm2835_timer_handler()
 
 int bcm2835_timer_init()
 {
-	timer = ioremap(TIMER_IOBASE, TIMER_SIZE);
+	timer = mmio_address(TIMER_IOBASE);
 
 	irq_install_service(TIMER_IRQ, &bcm2835_timer_handler);
 

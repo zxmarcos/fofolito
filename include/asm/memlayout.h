@@ -40,8 +40,8 @@ HIGH_VECTOR:
 0xFFFF_FFFF     +-------------------+
                 | ARM VECTOR TABLE  |
 0xFFFF_F000     +-------------------+
-                | ...               |
-                +-------------------+
+                | MMIO              |
+0xF000_0000     +-------------------+
                 | IOREMAP           |
 IOREMAP_START   +-------------------+
                 | VMALLOC        	|
@@ -75,5 +75,9 @@ PAGE_OFFSET     +-------------------+
 #define IOREMAP_START	(VMALLOC_START + VMALLOC_SIZE)
 /* 128MB de remapeamento */
 #define IOREMAP_SIZE	(128 * 1024 * 1024)
+
+#define MMIO_START	0xF0000000
+/* Nós só podemos mapear até 0xFFFFF000 */
+#define MMIO_SIZE	0x0FFFEFFF
 
 #endif

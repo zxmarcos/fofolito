@@ -36,7 +36,20 @@ void high_vectors_setup()
 
 void arch_early_init()
 {
+	unsigned pfn = 0;
+	char *vaddr, *endaddr;
 	high_vectors_setup();
+	
+	/* Mapeia os locais de MMIO */
+	vaddr = (char *) MMIO_START;
+	endaddr = (char *) (MMIO_START + MMIO_SIZE);
+
+	pfn = (0x20000000 >> PAGE_SHIFT);
+	while (vaddr <= endaddr) {
+		page_map(&k_pgdir, vaddr, pfn);
+		vaddr += PAGE_SIZE;
+		pfn++;
+	}
 }
 
 /* Configura os drivers da plataforma */

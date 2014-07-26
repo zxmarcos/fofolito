@@ -6,6 +6,7 @@
  */
 #include <asm/io.h>
 #include <asm/irq.h>
+#include <kernel/printk.h>
 #include <driver/bcm2835.h>
 #include <errno.h>
 #include <types.h>
@@ -35,7 +36,7 @@ static int bcm2835_mbox_handler()
 
 int bcm2835_mbox_init()
 {
-	mbox_reg = ioremap(MBOX_IOBASE, MBOX_SIZE);
+	mbox_reg = mmio_address(MBOX_IOBASE);
 	irq_install_service(MBOX_IRQ, &bcm2835_mbox_handler);
 	/* TODO: habilitar as irqs no registrador CONFIG */
 	irq_enable_line(MBOX_IRQ);

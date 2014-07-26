@@ -30,7 +30,7 @@ static volatile unsigned *gpio_reg = NULL;
 
 void bcm2835_gpio_init()
 {
-	gpio_reg = ioremap(GPIO_IOBASE, GPIO_SIZE);
+	gpio_reg = mmio_address(GPIO_IOBASE);
 	/* Configura o pino do LED como saída */
 	bcm2835_gpio_setfunction(RPI_LED_OK, GPIO_FUNC_OUTPUT);
 }

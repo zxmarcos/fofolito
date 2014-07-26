@@ -119,7 +119,7 @@ void kmain()
 	/* Fica de boas esperando as trocas de contexto */
 #endif
 	/* Como queremos imprimir para depuração do driver, inicializamos ele agora */
-	bcm2835_emmc_init();
+	//bcm2835_emmc_init();
 	for (;;) {
 		led_blink();
 		//printk("-");
