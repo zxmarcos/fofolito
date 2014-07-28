@@ -225,6 +225,13 @@ void irq_handler()
 		}
 	}
 
+	// TODO: Arrumar isto :P
+	// HACK: GPU IRQ 62 (EMMC)
+	if (val & (1 << 20)) {
+		if (gpu_irq_service_table[62])
+			gpu_irq_service_table[62]();
+	}
+
 	if (val & GPU_PENDING_1)
 		gpu_irq_handler_1();
 	if (val & GPU_PENDING_2)
