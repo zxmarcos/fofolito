@@ -13,9 +13,16 @@
 #define TASK_RUNNING	2
 
 struct task {
+	/* 
+	 * Esses campos são refereciados no código assembly diretamente,
+	 * não alterar a posição deles nesta estrutura 
+	 */
+	unsigned flags;
+	struct thread_context thread;
+	
+	/* campos normais */
 	unsigned pid;
 	unsigned state;
-	struct thread_context thread;
 	struct list_head list;
 	const char *name;
 };

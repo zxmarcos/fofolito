@@ -106,7 +106,7 @@ void kmain()
 	fb_console_init();
 	kernel_info();
 
-#if 0
+#if 1
 	irq_disable();
 	semaphore_init(&sem, 1);
 	create_task("a", 4);

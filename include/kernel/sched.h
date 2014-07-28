@@ -10,6 +10,7 @@
 int sched_init();
 int sched_add_task(struct task *tsk);
 void schedule();
+void sched_tick();
 void sched_yield();
 int sched_current_pid();
 struct task *sched_current_task();

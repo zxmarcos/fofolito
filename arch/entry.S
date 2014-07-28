@@ -4,11 +4,13 @@
  * Marcos Medeiros
  */
 #include <asm/asm.h>
+#include <kernel/taskflags.h>
 
 .section .text
 
 IMPORT(irq_handler)
-
+IMPORT(schedule)
+IMPORT(sched_current_task)
 
 .align 4
 ENTRY(excpt_irq_caller)
@@ -23,6 +25,15 @@ ENTRY(excpt_irq_caller)
 	/* Vamos salvar todos os registradores na pilha */
 	stmfd	sp!, {r0 - r12}
 	bl		irq_handler
+
+	/* Verifica se é necessário reescalonar as tarefas */
+	bl		sched_current_task
+	ldr		r1, [r0]
+	tst		r1, #TIF_NEED_RESCHED
+	bicne	r1, #TIF_NEED_RESCHED
+	strne	r1, [r0]
+	blne	schedule
+
 	ldmfd	sp!, {r0 - r12, lr}
 	
 	rfe		sp!

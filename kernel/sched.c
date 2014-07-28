@@ -8,6 +8,7 @@
 #include <asm/thread.h>
 #include <asm/irq.h>
 #include <kernel/task.h>
+#include <kernel/taskflags.h>
 #include <kernel/sched.h>
 #include <kernel/list.h>
 #include <types.h>
@@ -98,6 +99,13 @@ void sched_yield()
 	irq_save_state(flags);
 	schedule();
 	irq_restore_state(flags);
+}
+
+/* Função chamada pelo temporalizador */
+void sched_tick()
+{
+	/* Apenas setamos a flag NEED_RESCHED */
+	current_task->flags = TIF_NEED_RESCHED;
 }
 
 /*

@@ -41,7 +41,7 @@ static volatile unsigned *timer = NULL;
 static int bcm2835_timer_handler()
 {
 	clear_irq();
-	schedule();
+	sched_tick();
 	return -EOK;
 }
 
