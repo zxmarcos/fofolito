@@ -17,7 +17,6 @@
 #define TIMER_IOBASE	0x2000B000
 #define TIMER_SIZE		0x424
 #define TIMER_IRQ		ARM_IRQ(0)
-static volatile unsigned *timer = NULL;
 
 #define REG_LOAD		(0x400 >> 2)
 #define REG_VALUE		(0x404 >> 2)
@@ -36,7 +35,9 @@ static volatile unsigned *timer = NULL;
 #define REG_CTRL_ENABLE		(1 << 7)
 #define REG_CTRL_FRC_ENABLE	(1 << 9)
 
-#define clear_irq()	do { timer[REG_IRQCLEAR] = 1; } while (0)
+#define clear_irq()	writel(iobase + REG_IRQCLEAR, 1)
+
+static volatile unsigned *iobase = NULL;
 
 static int bcm2835_timer_handler()
 {
@@ -47,12 +48,12 @@ static int bcm2835_timer_handler()
 
 int bcm2835_timer_init()
 {
-	timer = mmio_address(TIMER_IOBASE);
+	iobase = mmio_address(TIMER_IOBASE);
 
 	irq_install_service(TIMER_IRQ, &bcm2835_timer_handler);
 
 	/* Vamos desligar o timer antes de configurar */
-	timer[REG_CTRL] = 0x00;
+	writel(iobase + REG_CTRL, 0x00);
 	clear_irq();
 	
 	/*
@@ -73,7 +74,7 @@ int bcm2835_timer_init()
 	 * pre_div = 249
 	 */
 
-	timer[REG_PREDIV] = 249;
+	writel(iobase + REG_PREDIV, 249);
 	const unsigned long timer_clock = 1000000; /* 1MHz */
 	const unsigned long MHz = 1000000;
 
@@ -85,16 +86,14 @@ int bcm2835_timer_init()
      *
      * Queremos 1 tick a cada 50ms, então...
 	 */
-	//timer[REG_RELOAD] = 50 * (timer_clock / MHz);
-	timer[REG_LOAD] = 50 * (timer_clock / MHz);
+	writel(iobase + REG_LOAD, 50 * (timer_clock / MHz));
 
 	/* 
 	 * Habilita o temporalizador com um contador de 23bits, interrupções habilitadas 
      * e o contador livre também é habilitado.
 	 */
-	timer[REG_CTRL] = REG_CTRL_32BIT | REG_CTRL_INTEN | REG_CTRL_ENABLE | REG_CTRL_FRC_ENABLE;
-
-	do_dsb();
+	writel(iobase + REG_CTRL, REG_CTRL_32BIT | REG_CTRL_INTEN |
+		REG_CTRL_ENABLE | REG_CTRL_FRC_ENABLE);
 	
 	irq_enable_line(ARM_IRQ(0));
 	return -EOK;
@@ -102,5 +101,5 @@ int bcm2835_timer_init()
 
 uint bcm2835_timer_read()
 {
-	return timer[REG_FREECNT];
+	return readl(iobase + REG_FREECNT);
 }

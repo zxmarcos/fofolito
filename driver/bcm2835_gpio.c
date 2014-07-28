@@ -10,7 +10,7 @@
 
 #define GPIO_IOBASE	0x20200000
 #define GPIO_SIZE	0x48
-static volatile unsigned *gpio_reg = NULL;
+static volatile unsigned *iobase = NULL;
 
 /* Como nosso acesso é de 32bits, divimos os endereços por 4bytes */
 #define REG_FUNCSEL_0	(0x00 >> 2)
@@ -30,7 +30,7 @@ static volatile unsigned *gpio_reg = NULL;
 
 void bcm2835_gpio_init()
 {
-	gpio_reg = mmio_address(GPIO_IOBASE);
+	iobase = mmio_address(GPIO_IOBASE);
 	/* Configura o pino do LED como saída */
 	bcm2835_gpio_setfunction(RPI_LED_OK, GPIO_FUNC_OUTPUT);
 }
@@ -44,10 +44,10 @@ void bcm2835_gpio_setfunction(uint pin, uint function)
 	uint pos = (pin % 10) * 3;
 	uint addr = REG_FUNCSEL_0 + bank;
 
-	uint data = gpio_reg[addr];
+	uint data = readl(iobase + addr);
 	data &= ~(7 << pos);
 	data |= (function & 7) << pos;
-	gpio_reg[addr] = data;
+	writel(iobase + addr, data);
 }
 
 void bcm2835_gpio_output_clearset(uint pin, uint clear)
@@ -60,9 +60,9 @@ void bcm2835_gpio_output_clearset(uint pin, uint clear)
 	uint addr = bank;
 
 	addr += (clear) ?  REG_OUTCLEAR_0 : REG_OUTSET_0;
-	gpio_reg[addr] = 1 << pos;
+	writel(iobase + addr, 1 << pos);
 	addr = bank + REG_EVENTSTAT_0;
-	gpio_reg[addr] = 1 << pos;
+	writel(iobase + addr, 1 << pos);
 }
 
 void bcm2835_turn_led(int state)

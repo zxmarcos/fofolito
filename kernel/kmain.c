@@ -10,16 +10,17 @@
 #include <kernel/printk.h>
 #include <kernel/sched.h>
 #include <kernel/semaphore.h>
+#include <kernel/task.h>
 #include <driver/fb_console.h>
 #include <driver/bcm2835.h>
 #include <asm/page.h>
 #include <asm/asm.h>
+#include <asm/io.h>
 #include <asm/irq.h>
 #include <asm/offset.h>
 #include <asm/platform.h>
-#include <memory.h>
 #include <asm/thread.h>
-#include <kernel/task.h>
+#include <memory.h>
 
 extern void simple_delay(int ticks);
 

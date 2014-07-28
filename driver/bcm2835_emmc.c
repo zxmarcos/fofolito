@@ -16,7 +16,6 @@
 #define EMMC_IOBASE	0x20300000
 #define EMMC_SIZE	0x100
 #define EMMC_IRQ	ARM_IRQ(20)
-static volatile unsigned *emmc_reg = NULL;
 
 /* Registradores */
 #define REG_ARG2			(0x00 >> 2)
@@ -203,6 +202,8 @@ static volatile unsigned *emmc_reg = NULL;
 #define CS_ADDRESS_ERROR		0x40000000
 #define CS_OUT_OF_RANGE			0x80000000
 
+static volatile unsigned *iobase = NULL;
+
 static const char *card_status_name[16] = {
 	"idle", "ready", "ident", "stby", "tran",
 	"data", "rcv", "prg", "dis", "res9", "res10",
@@ -299,11 +300,32 @@ static const struct {
 };
 
 
-asm("udelay:			\n"
-	"subs	r0, r0, #1	\n"
-	"bhi	udelay		\n"
-	"mov	pc, lr		\n");
-void udelay(unsigned cycles);
+static inline void udelay(int cycles) {
+	extern void simple_delay(int cycles);
+	simple_delay(cycles);
+}
+
+static inline unsigned sdhc_readl(unsigned reg)
+{
+	unsigned val = readl(iobase + reg);
+	return val;
+}
+
+static inline void sdhc_writel(unsigned reg, unsigned value)
+{
+	writel(iobase + reg, value);
+	udelay(100);
+}
+
+#define wait_for_lines() 											\
+	while (1) {														\
+		const unsigned mask = (ST_CMD_INHIBIT | ST_DAT_INHIBIT);	\
+		if (sdhc_readl(REG_STATUS) & mask) {						\
+			udelay(100);											\
+			continue;												\
+		}															\
+		break;														\
+	}
 
 /* Envia um comando normal */
 static int send_command(struct emmc_command *cmd)
@@ -322,43 +344,28 @@ static int send_command(struct emmc_command *cmd)
 	pkt = TM_CMD_INDEX(cmd->opcode);
 	pkt = pkt | rsp_type;
 
-	/* Espera até podermos enviar o comando */
-	while (1) {
-		unsigned status = emmc_reg[REG_STATUS];
-		if (status & (ST_CMD_INHIBIT | ST_DAT_INHIBIT)) {
-			udelay(100);
-			continue;
-		}
-		break;
-	}
+	wait_for_lines();
 
-	emmc_reg[REG_ARG1] = cmd->arg;
-	emmc_reg[REG_CMDTM] = pkt;
+	sdhc_writel(REG_ARG1, cmd->arg);
+	sdhc_writel(REG_CMDTM, pkt);
 
-	while (1) {
-		unsigned status = emmc_reg[REG_STATUS];
-		if (status & (ST_CMD_INHIBIT | ST_DAT_INHIBIT)) {
-			udelay(100);
-			continue;
-		}
-		break;
-	}
+	wait_for_lines();
 
 	/* Lê as respostas */
 	switch (rsp_type) {
 		/* respostas de 136bits */
 		case RSP_R2:	/* R4 */
-			cmd->rsp0 = emmc_reg[REG_RESP0];
-			cmd->rsp1 = emmc_reg[REG_RESP1];
-			cmd->rsp2 = emmc_reg[REG_RESP2];
-			cmd->rsp3 = emmc_reg[REG_RESP3];
+			cmd->rsp0 = sdhc_readl(REG_RESP0);
+			cmd->rsp1 = sdhc_readl(REG_RESP1);
+			cmd->rsp2 = sdhc_readl(REG_RESP2);
+			cmd->rsp3 = sdhc_readl(REG_RESP3);
 			break;
 			
 		default:
-			cmd->rsp0 = emmc_reg[REG_RESP0];
+			cmd->rsp0 = sdhc_readl(REG_RESP0);
 			break;
-
 	}
+	
 	return -EOK;
 }
 
@@ -395,42 +402,28 @@ static int send_transfer_command(struct emmc_command *cmd, int write)
 		pkt |= TM_DIR_CARD2HOST;
 
 	/* Espera até podermos enviar o comando */
-	while (1) {
-		unsigned status = emmc_reg[REG_STATUS];
-		if (status & (ST_CMD_INHIBIT | ST_DAT_INHIBIT)) {
-			udelay(100);
-			continue;
-		}
-		break;
-	}
+	wait_for_lines();
 
-	emmc_reg[REG_ARG1] = cmd->arg;
-	emmc_reg[REG_CMDTM] = pkt;
+	sdhc_writel(REG_ARG1, cmd->arg);
+	sdhc_writel(REG_CMDTM, pkt);
 
-	while (1) {
-		unsigned status = emmc_reg[REG_STATUS];
-		if (status & (ST_CMD_INHIBIT | ST_DAT_INHIBIT)) {
-			udelay(100);
-			continue;
-		}
-		break;
-	}
+	wait_for_lines();
 
 	/* Lê as respostas */
 	switch (rsp_type) {
 		/* respostas de 136bits */
 		case RSP_R2:	/* R4 */
-			cmd->rsp0 = emmc_reg[REG_RESP0];
-			cmd->rsp1 = emmc_reg[REG_RESP1];
-			cmd->rsp2 = emmc_reg[REG_RESP2];
-			cmd->rsp3 = emmc_reg[REG_RESP3];
+			cmd->rsp0 = sdhc_readl(REG_RESP0);
+			cmd->rsp0 = sdhc_readl(REG_RESP1);
+			cmd->rsp0 = sdhc_readl(REG_RESP2);
+			cmd->rsp0 = sdhc_readl(REG_RESP3);
 			break;
 			
 		default:
-			cmd->rsp0 = emmc_reg[REG_RESP0];
+			cmd->rsp0 = sdhc_readl(REG_RESP0);
 			break;
-
 	}
+
 	return -EOK;
 }
 
@@ -488,13 +481,13 @@ static void read_test()
 	pkt.arg = 0;
 	send_transfer_command(&pkt, 0);
 
-	status = emmc_reg[REG_STATUS];
+	status = sdhc_readl(REG_STATUS);
 
 	int counter = 0;
 	while (status & (1 << 11)) {
-		unsigned data = emmc_reg[REG_DATA];
+		unsigned data = sdhc_readl(REG_DATA);
 		printk("%X ", data);
-		status = emmc_reg[REG_STATUS];
+		status = sdhc_readl(REG_STATUS);
 		if (counter++ >= 10) {
 			printk("\n");
 			counter = 0;
@@ -559,7 +552,8 @@ static void init_sequence()
 
 void bcm2835_emmc_init()
 {
-	emmc_reg = mmio_address(EMMC_IOBASE);
+	//emmc_reg = mmio_address(EMMC_IOBASE);
+	iobase = mmio_address(EMMC_IOBASE);
 	irq_install_service(EMMC_IRQ, &bcm2835_emmc_handler);
 	init_sequence();
 	read_test();

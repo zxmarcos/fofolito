@@ -15,8 +15,6 @@
 #define MBOX_SIZE	0x24
 #define MBOX_IRQ	ARM_IRQ(1)
 
-/* A mailbox é mapeada nesse endereço de memória */
-volatile unsigned *mbox_reg = NULL;
 
 /* Registradores da MAILBOX */
 #define REG_READ	(0x00 >> 2)
@@ -28,15 +26,16 @@ volatile unsigned *mbox_reg = NULL;
 #define MBOX_FULL	0x80000000	
 #define MBOX_EMPTY	0x40000000
 
+static volatile unsigned *iobase = NULL;
+
 static int bcm2835_mbox_handler()
 {
-	printk("mbox_irq\n");
 	return -EOK;
 }
 
 int bcm2835_mbox_init()
 {
-	mbox_reg = mmio_address(MBOX_IOBASE);
+	iobase = mmio_address(MBOX_IOBASE);
 	irq_install_service(MBOX_IRQ, &bcm2835_mbox_handler);
 	/* TODO: habilitar as irqs no registrador CONFIG */
 	irq_enable_line(MBOX_IRQ);
@@ -48,26 +47,25 @@ int bcm2835_mbox_init()
  */
 uint bcm2835_mbox_read(uint channel)
 {
-	uint val = 0;
+	uint value = 0;
 	/* Espera até a mailbox ter algo para nos dar */
-	while (mbox_reg[REG_STATUS] & MBOX_EMPTY);
+	while (readl(iobase + REG_STATUS) & MBOX_EMPTY);
 
 	/* Espera até a mensagem do nosso canal */
 	do {
-		val = mbox_reg[REG_READ];
-	} while ((val & 0xF) != channel);
+		value = readl(iobase + REG_READ);
+	} while ((value & 0xF) != channel);
 
 	/* Retorna somente os 28bits de dados, sem o canal */
-	return val & ~0xF;
+	return value & ~0xF;
 }
 
 /*
  * Envia uma mensagem para um canal.
  */
-void bcm2835_mbox_write(uint channel, uint data)
+void bcm2835_mbox_write(uint channel, unsigned data)
 {
 	/* Espera até a mailbox ter espaço vazio */
-	while (mbox_reg[REG_STATUS] & MBOX_FULL);
-
-	mbox_reg[REG_WRITE] = (data & ~0xF) | (channel & 0xF);
+	while (readl(iobase + REG_STATUS) & MBOX_FULL);
+	writel(iobase + REG_WRITE, (data & ~0xF) | (channel & 0xF));
 }
